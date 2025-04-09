@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&family=Russo+One&display=swap" rel="stylesheet">
+    {% if theme == 'dark' %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='CSS/dark.css') }}">
+    {% else %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+    {% endif %}
+    <title>Config</title>
+</head>
+
+<script>
+    function wallpaper_theme() {
+        document.getElementById("window").src = "{{ url_for('set_wallpaper_and_theme') }}";
+    }
+
+    function sessions() {
+        document.getElementById("window").src = "{{ url_for('user_management') }}";
+    }
+
+    function apps() {
+        document.getElementById("window").src = "{{ url_for('apps') }}";
+    }
+</script>
+
+<body>
+    <div id="d">
+        <div id="menu">
+            <h1 id="title">HomeFusion V3.0</h1>
+            <div>
+                <p onclick="wallpaper_theme();">Visuals</p>
+                <p onclick="sessions();">Sessions</p>
+                <p onclick="apps();">Aplications</p>
+            </div>
+        </div>
+        <iframe id="window" src="{{ url_for('set_wallpaper_and_theme') }}" frameborder="0"></iframe>
+    </div>
+</body>
+
+</html>

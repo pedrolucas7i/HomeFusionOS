@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualização de Aplicativos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: white;
+        }
+        #app-list {
+            width: 25%;
+            background-color: #f8f8f8;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        #app-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        #app-list li {
+            margin-bottom: 10px;
+        }
+        #app-list a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #eaeaea;
+        }
+        #app-list a:hover {
+            background-color: #d5d5d5;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body id="view">
+    <div id="app-list">
+        <h2>Aplicativos Disponíveis</h2>
+        <ul>
+            {% for app in docker_apps %}
+                {% if app.installed %}
+                <li>
+                    <a href="#" onclick="loadApp('{{ ip }}', '{{ app.port }}', '{{ app.name }}')">{{ app.name }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            {% for app in non_docker_apps %}
+                {% if app.installed %}
+                    <li>
+                        <a href="#" onclick="loadApp('{{ ip }}', '{{ app.port }}', '{{ app.name }}')">{{ app.name }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+    <script>
+        function loadApp(ip, port, app_name) {
+            function redirectToNewWindow(url) {
+                window.open(url, '_blank');
+            }
+            if (app_name == "pihole") {
+                redirectToNewWindow(`http://${ip}:${port}/login.php`);
+            } else {
+                document.getElementById('view').innerHTML = `<iframe id='iframe' src='http://${ip}:${port}' frameborder='0'></iframe>`;
+            }
+        }
+    </script>
+</body>
+</html>

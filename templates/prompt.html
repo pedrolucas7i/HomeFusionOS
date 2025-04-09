@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Linux</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #111;
+            color: #eee;
+            padding: 20px;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 20px);
+            background-color: transparent;
+            border: none;
+            color: #eee;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+    <form method="post">
+        <label for="command">{{ userhostfile }}</label>
+        <input type="text" id="command" name="command" autofocus autocomplete="off">
+        <script>
+            document.addEventListener("keypress", (e) => {
+                if (e.key == "enter") {
+                    document.querySelector("form").submit();
+                }
+            })
+        </script>
+    </form>
+    <pre>
+        {{ output }}
+    </pre>
+</body>
+
+</html>
