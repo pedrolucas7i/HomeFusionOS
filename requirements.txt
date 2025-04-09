@@ -2,6 +2,8 @@ bcrypt
 psutil
 mysql-connector-python
 docker
-Flask
+flask
 Werkzeug
 python-dotenv
+pandas
+sqlalchemy
