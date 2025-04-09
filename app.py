@@ -301,6 +301,45 @@ def method_not_allowed(e):
     # Caso contrário, delegar ao manipulador global ou retornar uma resposta padrão
     return "Method Not Allowed", 405
 
+@app.route('/user_management', methods=['GET', 'POST'])
+def user_management():
+    users = get_all_users()
+    if users is None:
+        users = []
+    return render_template('user_management.html', users=users)
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user_route(user_id):
+    try:
+        delete_user(user_id)
+        flash('User deleted successfully!', 'success')
+    except Exception as e:
+        flash(str(e), 'danger')
+    return redirect(url_for('user_management'))
+
+@app.route('/update_password/<int:user_id>', methods=['POST'])
+def update_password_route(user_id):
+    new_password = request.form['new_password']
+    update_user_password(user_id, new_password)
+    flash('Password updated successfully!', 'success')
+    return redirect(url_for('user_management'))
+
+@app.route('/create_user', methods=['POST'])
+def create_user_route():
+    username = request.form['username']
+    password = request.form['password']
+    create_user(username, password)
+    flash('User created successfully!', 'success')
+    return redirect(url_for('user_management'))
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    user_id = session.get('user_id', None)
+    if not user_id:
+        return redirect(url_for('login'))
+
+    return render_template('settings.html')
+
 @app.route('/prompt', methods=['GET', 'POST'])
 def prompt():
     user_id = session.get('user_id', None)
@@ -325,8 +364,16 @@ def prompt():
                            userhostfile=userhostfile,
                            output="")
 
-@app.route('/app/<string:app_name>')
-def app0():
+@app.route('/apps')
+def apps():
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
+    
+    return render_template('apps.html')
+
+@app.route('/apps/<string:app_name>')
+def apps():
     if 'logged_in' not in session:
         flash('Please log in to access this page.', 'danger')
         return redirect(url_for('login'))
