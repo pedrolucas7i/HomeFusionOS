@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&family=Russo+One&display=swap" rel="stylesheet">
+    <title>File Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+                * {
+            box-sizing: border-box;
+            font-family: "Russo One", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            user-select: none;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        body {
+            background-color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        .navigation, .upload-form, .create-folder-form {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .navigation a, .upload-form button, .create-folder-form button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            width: 150px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .navigation a:hover, .upload-form button:hover, .create-folder-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .file-list ul {
+            list-style-type: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .file-list li {
+            background-color: #e8e8e8;
+            border-radius: 10px;
+            text-align: center;
+            padding: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .file-list li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .file-list a {
+            text-decoration: none;
+            color: #333;
+            margin-top: 90%;
+        }
+
+        .file-list img {
+            width: 77%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .file-list iframe {
+            width: 100%;
+            height: 200px;
+            border-radius: 5px;
+        }
+
+        form {
+            margin: 0;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <div class="top">
+            <!-- Create Folder Form -->
+            <div class="create-folder-form">
+                <form action="{{ url_for('create_folder_route') }}" method="post">
+                    <input type="hidden" name="folder" value="{{ current_folder }}">
+                    <label for="new_folder">Folder Name:</label>
+                    <input type="text" name="new_folder" id="new_folder" required>
+                    <button type="submit">Create Folder</button>
+                </form>
+            </div>
+
+            <!-- Upload File Form -->
+            <div class="upload-form">
+                <form action="{{ url_for('files', folder=current_folder) }}" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="folder" value="{{ current_folder }}">
+                    <input type="file" name="file" id="file" required>
+                    <button type="submit">Upload</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- List files and folders -->
+        <div class="file-list">
+            <h2>Contents of "{{ current_folder }}"</h2>
+            <ul>
+                {% if parent_folder %}
+                    <li onclick="location.href=`{{ url_for('files', folder=parent_folder) }}`">
+                        <img src="{{ url_for('static', filename='icons/folder.png') }}" alt=""><br>
+                        <a>Back</a>
+                    </li>
+                {% endif %}
+                {% for folder in folders %}
+                    <li onclick="location.href= `{{ url_for('files', folder=current_folder ~ '/' ~ folder) }}`">
+                        <img src="{{ url_for('static', filename='icons/folder.png') }}" alt=""><br>
+                        <a>{{ folder }}</a>
+                        <form action="{{ url_for('delete_folder') }}" method="post">
+                            <input type="hidden" name="folder" value="{{ current_folder ~ '/' ~ folder }}">
+                            <button type="submit">Delete Folder</button>
+                        </form>
+                    </li>
+                {% endfor %}
+                {% for file in files %}
+                    <li onclick="location.href= `{{ url_for('download_file', filename=file, folder=current_folder) }}`">
+                        <a >{{ file }}</a>
+                        <form action="{{ url_for('delete_file', filename=file) }}" method="post" style="display:inline;">
+                            <input type="hidden" name="folder" value="{{ current_folder }}">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

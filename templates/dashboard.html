@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% if theme == 'dark' %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='CSS/dark.css') }}">
+  {% else %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+  {% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&family=Russo+One&display=swap" rel="stylesheet">
+  <title>Dashboard</title>
+</head>
+
+<body>
+  <div id="dashboard" style="background-image: url('{{ wallpaper }}');">
+    <div id="top">
+      <div id="usage" onclick="">
+        <img style="margin-left: 0vw;" src="{{ url_for('static', filename='icons/cpu.png') }}" alt="">
+        {{ cpu_usage }}%
+        <img src="{{ url_for('static', filename='icons/ram.png') }}" alt="">
+        {{ ram_usage }}%
+        <img src="{{ url_for('static', filename='icons/wifi.png') }}" alt="">
+        {{ wifi_signal }}%
+      </div>
+      <div id="clock">
+        <script>
+          function updateTime() {
+            var now = new Date();
+            var hours = now.getHours();
+            var minutes = now.getMinutes();
+            var seconds = now.getSeconds();
+            var timeString = formatTime(hours) + ":" + formatTime(minutes) + ":" + formatTime(seconds);
+            document.getElementById("clock").innerHTML = timeString;
+            setTimeout(updateTime, 950);
+          }
+
+          function formatTime(time) {
+            return (time < 10 ? "0" : "") + time;
+          }
+
+          updateTime();
+        </script>
+      </div>
+      <div id="date">
+        <script>
+          function updateDate() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = now.getMonth() + 1;
+            var day = now.getDate();
+            var dateString = formatTime(day) + "/" + formatTime(month) + "/" + year;
+            document.getElementById("date").innerHTML = dateString;
+            setTimeout(updateDate, 950);
+          }
+
+          function formatTime(time) {
+            return (time < 10 ? "0" : "") + time;
+          }
+
+          updateDate();
+        </script>
+      </div>
+    </div>
+    <div id="bar">
+      <div id="task-bar">
+        <div class="app" onclick="prompt();">
+          <img src="{{ url_for('static', filename='icons/prompt.png') }}" alt="">
+        </div>
+        <div class="app" onclick="config();">
+          <img src="{{ url_for('static', filename='icons/settings.png') }}" alt="">
+        </div>
+        <div class="app" onclick="files();">
+          <img src="{{ url_for('static', filename='icons/files.png') }}" alt="">
+        </div>
+        <div class="app" onclick="webcams();">
+          <img src="{{ url_for('static', filename='icons/cctv-camera.png') }}" alt="">
+        </div>
+        <div class="app" onclick="apps();">
+          <img src="{{ url_for('static', filename='icons/apps.png') }}" alt="">
+        </div>
+        <div class="app" onclick="store();">
+          <img src="{{ url_for('static', filename='icons/shop.png') }}" alt="">
+        </div>
+      </div>
+    </div>
+    <div id="open">
+    </div>
+  </div>
+</body>
+<script>
+  //WALLPAPER
+  var dashb = document.getElementById("dashboard");
+  dashb.style.backgroundImage = `url('{{ wallpaper }}')`;
+
+  var app_run = false;
+  function prompt() {
+    if (!app_run) {
+      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./prompt' frameborder='0'></iframe>";
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
+      }, 10); 
+    } else {
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
+        setTimeout(function () {
+          document.getElementById("iframe").style.visibility = "hidden";
+        }, 900); 
+      }, 10);
+    }
+    app_run = !app_run;
+  }
+  function config() {
+    if (!app_run) {
+      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./settings' frameborder='0'></iframe>";
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
+      }, 10);
+    } else {
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
+        setTimeout(function () {
+          document.getElementById("iframe").style.visibility = "hidden";
+        }, 900);
+      }, 10);
+    }
+    app_run = !app_run;
+  }
+
+  function files() {
+    if (!app_run) {
+      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./files' frameborder='0'></iframe>";
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
+      }, 10);
+    } else {
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
+        setTimeout(function () {
+          document.getElementById("iframe").style.visibility = "hidden";
+        }, 900);
+      }, 10);
+    }
+    app_run = !app_run;
+  }
+
+  function webcams() {
+    if (!app_run) {
+      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./webcams' frameborder='0'></iframe>";
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
+      }, 10);
+    } else {
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
+        setTimeout(function () {
+          document.getElementById("iframe").style.visibility = "hidden";
+        }, 900);
+      }, 10);
+    }
+    app_run = !app_run;
+  }
+  function apps() {
+    if (!app_run) {
+      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./view' frameborder='0'></iframe>";
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
+      }, 10);
+    } else {
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
+        setTimeout(function () {
+          document.getElementById("iframe").style.visibility = "hidden";
+        }, 900);
+      }, 10);
+    }
+    app_run = !app_run;
+  }
+
+  function store() {
+    if (!app_run) {
+      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./apps' frameborder='0'></iframe>";
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
+      }, 10);
+    } else {
+      setTimeout(function () {
+        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
+        setTimeout(function () {
+          document.getElementById("iframe").style.visibility = "hidden";
+        }, 900);
+      }, 10);
+    }
+    app_run = !app_run;
+  }
+</script>
+
+</html>

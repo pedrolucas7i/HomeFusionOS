@@ -1,0 +1,7 @@
+bcrypt
+psutil
+mysql-connector-python
+docker
+Flask
+Werkzeug
+python-dotenv

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/iframe.css') }}">
+    <title>Wallpaper Management</title>
+</head>
+<body>
+    <h1>Wallpaper Management</h1>
+
+    <!-- Seção para definir o wallpaper e o tema -->
+    <section>
+        <h2>Set Wallpaper and Theme</h2>
+        <form action="{{ url_for('set_wallpaper_and_theme') }}" method="post">
+            <label for="wallpaper">Select Wallpaper:</label>
+            <select name="wallpaper" id="wallpaper">
+                <option value="">Select a Wallpaper</option>
+                {% for wallpaper in availble_wallpapers %}
+                    <option value="{{ wallpaper }}" {% if wallpaper == selected_wallpaper_path %}selected{% endif %}>{{ wallpaper }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="theme">Select Theme:</label>
+            <select name="theme" id="theme">
+                <option value="light" {% if selected_theme == 'light' %}selected{% endif %}>Light</option>
+                <option value="dark" {% if selected_theme == 'dark' %}selected{% endif %}>Dark</option>
+            </select>
+
+            <button type="submit">Save Changes</button>
+        </form>
+    </section>
+
+    <!-- Seção para fazer o upload de um novo wallpaper -->
+    <section>
+        <h2>Upload Wallpaper</h2>
+        <form action="{{ url_for('upload_wallpaper') }}" method="post" enctype="multipart/form-data">
+            <label for="wallpaper">Select Wallpaper:</label>
+            <input type="file" name="wallpaper" id="wallpaper" required>
+            <button type="submit">Upload</button>
+        </form>
+    </section>
+
+    <!-- Exibindo mensagens de feedback -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>
