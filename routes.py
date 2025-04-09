@@ -1,17 +1,7 @@
-import os
-from flask import Flask, session, redirect, url_for, render_template, request, flash
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
-from models import User, WallpaperAndThemeForUser , DockerContainer, initialize_db
+from flask import render_template, request, redirect, url_for, flash, session, Flask
+from models import User, WallpaperAndThemeForUser , DockerContainer
 from utils import get_selected_wallpaper_and_theme, get_all_users, create_user, delete_user, update_user_password, apply_wallpaper_and_theme, log_user_access
-
-app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY', 'fallback_secret_key')
-app.config['UPLOAD_FOLDER'] = 'uploads/'
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{os.environ.get('USER_DB')}:{os.environ.get('PASS_DB')}@{os.environ.get('HOST_DB')}/{os.environ.get('DB')}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
+from app import app
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -78,8 +68,3 @@ def set_wallpaper_and_theme():
     availble_wallpapers = os.listdir("static/wallpapers/")
     selected_wallpaper_path, selected_theme = get_selected_wallpaper_and_theme(session['user_id'])
     return render_template('setwt.html', availble_wallpapers=availble_wallpapers, selected_wallpaper_path=selected_wallpaper_path, selected_theme=selected_theme)
-
-# Application Entry Point
-if __name__ == '__main__':
-    initialize_db(app)
-    app.run(debug=True, host="0.0.0.0", port=9900)
