@@ -3,7 +3,9 @@ psutil
 mysql-connector-python
 docker
 flask
+Flask-SQLAlchemy
 Werkzeug
+pymysql
 python-dotenv
 pandas
 sqlalchemy
