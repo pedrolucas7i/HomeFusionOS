@@ -373,7 +373,7 @@ def apps():
     return render_template('apps.html')
 
 @app.route('/apps/<string:app_name>')
-def apps():
+def apps2():
     if 'logged_in' not in session:
         flash('Please log in to access this page.', 'danger')
         return redirect(url_for('login'))
