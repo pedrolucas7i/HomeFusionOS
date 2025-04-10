@@ -194,6 +194,9 @@ def list_files_and_folders(path):
 @app.route('/files/', defaults={'folder': 'root'})
 @app.route('/files/<path:folder>', methods=['GET', 'POST'])
 def files(folder):
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     # Caminho completo para a pasta atual
     current_folder = os.path.join(app.config['UPLOAD_FOLDER'], folder)
 
@@ -242,6 +245,9 @@ def files(folder):
 
 @app.route('/download/<path:filename>', methods=['GET'])
 def download_file(filename):
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     folder = request.args.get('folder', '')
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], folder, filename)
     if os.path.exists(file_path):
@@ -253,6 +259,9 @@ def download_file(filename):
 
 @app.route('/delete/<path:filename>', methods=['POST'])
 def delete_file(filename):
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     folder = request.form['folder']
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], folder, filename)
     if os.path.isfile(file_path):
@@ -264,6 +273,9 @@ def delete_file(filename):
 
 @app.route('/delete_folder', methods=['POST'])
 def delete_folder():
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     folder_to_delete = request.form['folder']
     folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_to_delete)
     if os.path.isdir(folder_path):
@@ -278,6 +290,9 @@ def delete_folder():
 
 @app.route('/create_folder', methods=['POST'])
 def create_folder_route():
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     folder = request.form['folder']
     new_folder = request.form['new_folder']
     new_folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder, new_folder)
@@ -303,6 +318,9 @@ def method_not_allowed(e):
 
 @app.route('/user_management', methods=['GET', 'POST'])
 def user_management():
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     users = get_all_users()
     if users is None:
         users = []
@@ -310,6 +328,9 @@ def user_management():
 
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 def delete_user_route(user_id):
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     try:
         delete_user(user_id)
         flash('User deleted successfully!', 'success')
@@ -319,6 +340,9 @@ def delete_user_route(user_id):
 
 @app.route('/update_password/<int:user_id>', methods=['POST'])
 def update_password_route(user_id):
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     new_password = request.form['new_password']
     update_user_password(user_id, new_password)
     flash('Password updated successfully!', 'success')
@@ -326,6 +350,9 @@ def update_password_route(user_id):
 
 @app.route('/create_user', methods=['POST'])
 def create_user_route():
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     username = request.form['username']
     password = request.form['password']
     create_user(username, password)
@@ -334,6 +361,9 @@ def create_user_route():
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     user_id = session.get('user_id', None)
     if not user_id:
         return redirect(url_for('login'))
@@ -342,6 +372,9 @@ def settings():
 
 @app.route('/prompt', methods=['GET', 'POST'])
 def prompt():
+    if 'logged_in' not in session:
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
     user_id = session.get('user_id', None)
     if not user_id:
         return redirect(url_for('login'))

@@ -19,7 +19,8 @@
   <div id="dashboard" style="background-image: url('{{ wallpaper }}');">
     <div id="top">
       <div id="usage" onclick="">
-        <img style="margin-left: 0vw;" src="{{ url_for('static', filename='icons/cpu.png') }}" alt="">
+        <img onclick='settings()' style="margin-left: 0vw;" src="{{ url_for('static', filename='icons/settings.png') }}" alt="">
+        <img src="{{ url_for('static', filename='icons/cpu.png') }}" alt="">
         {{ cpu_usage }}%
         <img src="{{ url_for('static', filename='icons/ram.png') }}" alt="">
         {{ ram_usage }}GB
@@ -104,7 +105,7 @@
     }
     app_run = !app_run;
   }
-  function config() {
+  function settings() {
     if (!app_run) {
       document.getElementById("open").innerHTML = "<iframe id='iframe' src='./settings' frameborder='0'></iframe>";
       setTimeout(function () {
@@ -138,22 +139,6 @@
     app_run = !app_run;
   }
 
-  function webcams() {
-    if (!app_run) {
-      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./webcams' frameborder='0'></iframe>";
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
-      }, 10);
-    } else {
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
-        setTimeout(function () {
-          document.getElementById("iframe").style.visibility = "hidden";
-        }, 900);
-      }, 10);
-    }
-    app_run = !app_run;
-  }
   function apps() {
     if (!app_run) {
       document.getElementById("open").innerHTML = "<iframe id='iframe' src='./view' frameborder='0'></iframe>";
