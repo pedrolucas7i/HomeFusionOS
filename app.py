@@ -74,11 +74,27 @@ with app.app_context():
     db.create_all()
 
 # Helper function to create a new user
-def create_new_user(username, password):
-    hashed_password = generate_password_hash(password)  # Default method is 'pbkdf2:sha256'
+def create_user(username, password):
+    hashed_password = generate_password_hash(password)
     new_user = User(username=username, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
+
+def update_password(username, new_password):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+    else:
+        print("User not found.")
+
+def delete_user(username):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+    else:
+        print("User not found")
 
 # Check for the first user and create one if it doesn't exist
 def check_and_create_first_user():
@@ -87,6 +103,9 @@ def check_and_create_first_user():
         print("No user found. Creating default admin user.")
         create_new_user('admin', 'adminpassword')  # Create a default admin user
         print("Default admin user created.")
+
+def get_users():
+    return User.query.all()
 
 with app.app_context():
     check_and_create_first_user()  # Ensure a user exists when the app starts
@@ -316,48 +335,6 @@ def method_not_allowed(e):
     # Caso contrário, delegar ao manipulador global ou retornar uma resposta padrão
     return "Method Not Allowed", 405
 
-@app.route('/user_management', methods=['GET', 'POST'])
-def user_management():
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    users = get_all_users()
-    if users is None:
-        users = []
-    return render_template('user_management.html', users=users)
-
-@app.route('/delete_user/<int:user_id>', methods=['POST'])
-def delete_user_route(user_id):
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    try:
-        delete_user(user_id)
-        flash('User deleted successfully!', 'success')
-    except Exception as e:
-        flash(str(e), 'danger')
-    return redirect(url_for('user_management'))
-
-@app.route('/update_password/<int:user_id>', methods=['POST'])
-def update_password_route(user_id):
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    new_password = request.form['new_password']
-    update_user_password(user_id, new_password)
-    flash('Password updated successfully!', 'success')
-    return redirect(url_for('user_management'))
-
-@app.route('/create_user', methods=['POST'])
-def create_user_route():
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    username = request.form['username']
-    password = request.form['password']
-    create_user(username, password)
-    flash('User created successfully!', 'success')
-    return redirect(url_for('user_management'))
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
@@ -368,7 +345,27 @@ def settings():
     if not user_id:
         return redirect(url_for('login'))
 
-    return render_template('settings.html')
+    if request.method == 'POST':
+        if 'create_new_user' in request.form:
+            username = request.form['new_username']
+            password = request.form['new_password']
+            print(f"Creating user: {username} Password: {password}")
+            create_user(username, password)
+
+        elif 'update_password' in request.form:
+            username = request.form['user_username']
+            password = request.form['new_password']
+            print(f"Updating {username} password to: {password}")
+            update_password(username, password)
+
+        elif 'delete_user' in request.form:
+            username = request.form['user_id_to_delete']
+            print(f"Deleting user: {username}")
+            delete_user(username)
+
+        return redirect(url_for('settings'))
+
+    return render_template('settings.html', users=get_users())
 
 @app.route('/prompt', methods=['GET', 'POST'])
 def prompt():
