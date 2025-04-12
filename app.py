@@ -417,7 +417,7 @@ def settings():
             update_password(username, password)
 
         elif 'delete_user' in request.form:
-            username = request.form['user_id_to_delete']
+            username = request.form['username_to_delete']
             print(f"Deleting user: {username}")
             delete_user(username)
 

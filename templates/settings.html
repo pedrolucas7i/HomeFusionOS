@@ -108,7 +108,7 @@
 
                 <div class="col-md-7" id="deleteFormWrapper" style="display: none;">
                     <form method="POST" action="/settings">
-                        <input type="hidden" name="user_id_to_delete" id="selectedUserIdToDelete">
+                        <input type="hidden" name="username_to_delete" id="selectedUsernameToDelete">
                         <p class="fw-bold" id="deleteConfirmText"></p>
                         <button type="submit" name="delete_user" class="btn btn-danger">Confirmar Eliminação</button>
                     </form>
@@ -122,10 +122,10 @@
     function selectUserToDelete(id, username) {
         const wrapper = document.getElementById('deleteFormWrapper');
         const confirmText = document.getElementById('deleteConfirmText');
-        const userIdInput = document.getElementById('selectedUserIdToDelete');
+        const usernameInput = document.getElementById('selectedUsernameToDelete');
 
         confirmText.textContent = `Tem certeza que deseja eliminar o utilizador: ${username}?`;
-        userIdInput.value = id;
+        usernameInput.value = username;
 
         wrapper.style.display = 'block';
         wrapper.classList.add('animate__animated', 'animate__fadeInRight');
