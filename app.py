@@ -10,6 +10,7 @@ import socket
 import pymysql
 import time
 import json
+import requests
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -17,6 +18,8 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from collections import defaultdict
+from flask_socketio import SocketIO, emit
+import os, pty, select, subprocess, getpass, socket, platform, threading
 
 
 load_dotenv()
@@ -24,6 +27,8 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY')  # Make sure the SECRET_KEY is set in .env
 app.config['UPLOAD_FOLDER'] = 'uploads/'
+
+socketio = SocketIO(app)
 
 # Getting the environment variables
 HOST_DB = os.environ.get('HOST_DB', 'localhost')
@@ -430,27 +435,45 @@ def prompt():
     if 'logged_in' not in session:
         flash('Please log in to access this page.', 'danger')
         return redirect(url_for('login'))
+
     user_id = session.get('user_id', None)
     if not user_id:
         return redirect(url_for('login'))
+
     if platform.system() == "Windows":
         userhostfile = os.getcwd() + " $ "
     else:
         userhostfile = getpass.getuser() + "@" + socket.gethostname() + ":/" + os.path.basename(os.getcwd()) + "$ "
-    if request.method == 'POST':
-        command = request.form['command']
-        try:
-            result = subprocess.run(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output = result.stdout.decode("utf-8") + result.stderr.decode("utf-8")
-        except Exception as e:
-            output = str(e)
 
-        return render_template('prompt.html',
-                               userhostfile=userhostfile,
-                               output=output)
-    return render_template('prompt.html',
-                           userhostfile=userhostfile,
-                           output="")
+    return render_template('prompt.html', userhostfile=userhostfile, output="")  # keeping your old prompt.html
+
+@app.route('/shell')
+def terminal():
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
+    return render_template('xterm.html')
+
+def read_and_emit_output(fd):
+    while True:
+        try:
+            data = os.read(fd, 1024).decode()
+            socketio.emit('shell_output', data)
+        except OSError:
+            break
+
+@socketio.on('shell_input')
+def handle_terminal_input(data):
+    global child_fd
+    os.write(child_fd, data.encode())
+
+@socketio.on('connect')
+def start_terminal():
+    global child_fd
+    pid, child_fd = pty.fork()
+    if pid == 0:
+        os.execvp("bash", ["bash"])
+    else:
+        threading.Thread(target=read_and_emit_output, args=(child_fd,)).start()
 
 # Load apps from the local JSON file
 def load_offline_apps():
@@ -461,73 +484,42 @@ def load_offline_apps():
                 raw_data = json.load(f)
                 grouped = defaultdict(list)
 
-                for app in raw_data["network"] + raw_data["web"] + raw_data["storage"] + raw_data["backup"] + raw_data["media"] + raw_data["media-automation"] + raw_data["downloads"] + raw_data["music"] + raw_data["monitoring"] + raw_data["docker"] + raw_data["security"] + raw_data["automation"] + raw_data["documents"] + raw_data["search"] + raw_data["finance"] + raw_data["dev"]:
-                    # Add icon URL
-                    app["icon_url"] = get_icon_url(app["name"])
-                    # Add the app to the correct namespace
-                    grouped[app["namespace"]].append(app)
+                # Load apps from each category in the raw data
+                for category in raw_data.keys():
+                    for app in raw_data.get(category, []):
+                        app["icon_url"] = get_icon_url(app["name"])
+                        app["install_script"] = app.get("install_script")
+                        grouped[app["namespace"]].append(app)
 
                 apps_data = grouped
-                print(f"Loaded {sum(len(v) for v in grouped.values())} apps from local file.")
+                print(f"Loaded {sum(len(v) for v in grouped.values())} apps from local file.")  # Debugging line
         except Exception as e:
             print(f"Error reading JSON file: {e}")
             apps_data = defaultdict(list)
 
+    print(apps_data)
     return apps_data
 
-# Function to get icon using Simple Icons
 def get_icon_url(name):
-    clean_name = name.lower()
-    formatted = ICON_OVERRIDES.get(clean_name, clean_name.replace(" ", "").replace(".", ""))
-    return f"https://cdn.simpleicons.org/{formatted}"
+    clean_name = name.lower().replace(" ", "").replace(".", "").replace("-", "")
+    return f"https://cdn.simpleicons.org/{clean_name}"
 
-# Generate the Docker install script
-def generate_install_script(app_name, app_port):
-    return f"docker run -d -p {app_port}:80 --name {app_name} {app_name}"
 
-# Function to check if a port is in use
-def is_port_in_use(port):
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            return s.connect_ex(('127.0.0.1', port)) == 0
-    except Exception as e:
-        print(f"Error checking port {port}: {e}")
-        return True
-
-# Generate a unique port for each app
-def generate_unique_port(start_port=8000, end_port=9999):
-    used_ports = set(app_ports.values())
-    for port in range(start_port, end_port):
-        if port not in used_ports and not is_port_in_use(port):
-            return port
-    raise Exception("No available ports in the range!")
-
-# App ports store
-app_ports = {}
-
-# Get or assign a port for an app
-def get_app_port(app_name):
-    if app_name not in app_ports:
-        app_ports[app_name] = generate_unique_port()
-    return app_ports[app_name]
-
-# Save app data to the local JSON file
 def save_offline_apps(data):
-    with open(OFFLINE_JSON_PATH, "w") as f:
-        json.dump(data, f, indent=4)
+    try:
+        with open(OFFLINE_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        print("App data saved successfully.")
+    except Exception as e:
+        print(f"Error saving app data: {e}")
 
 # Route to display all apps
 @app.route('/apps')
 def all_apps():
     apps_by_namespace = load_offline_apps()
-
-    # Add install scripts to apps
-    for namespace, apps in apps_by_namespace.items():
-        for app in apps:
-            port = get_app_port(app['name'])
-            app["install_script"] = generate_install_script(app['name'], port)
-
+    print(apps_by_namespace) 
     return render_template('apps.html', apps_by_namespace=apps_by_namespace)
+
 
 # Route to display details of a specific app
 @app.route('/app/<app_name>')
@@ -535,10 +527,10 @@ def app_details(app_name):
     for namespace, apps in load_offline_apps().items():
         for app in apps:
             if app['name'].lower() == app_name.lower():
-                port = get_app_port(app['name'])
-                script = generate_install_script(app['name'], port)
+                script = app['install_script']
                 return render_template('app_details.html', app=app, install_script=script)
     return "App not found!", 404
+
 
 # Route to fetch all apps (used for refresh or frontend calls)
 @app.route('/fetch_new_apps')
@@ -550,14 +542,6 @@ def fetch_new_apps():
 def search():
     search_value = request.args.get('search-value', '').strip().lower()
     filtered = defaultdict(list)
-
-    for namespace, apps in load_offline_apps().items():
-        for app in apps:
-            if search_value in app['name'].lower():
-                port = get_app_port(app['name'])
-                app_copy = app.copy()
-                app_copy["install_script"] = generate_install_script(app['name'], port)
-                filtered[namespace].append(app_copy)
 
     return render_template('apps.html', apps_by_namespace=filtered)
 
@@ -571,16 +555,13 @@ def install_app_route(app_name):
         for namespace, app_list in apps_data.items():
             for app in app_list:
                 if app['name'].lower() == app_name.lower():
-                    docker_image = app['docker_image']
-                    port = get_app_port(app['name'])
-                    clean_name = app['name'].replace("-", "")
+                    install_script = app.get('install_script')
 
-                    command = [
-                        "docker", "run", "-d", "-p", f"{port}:80",
-                        "--name", app_name, docker_image
-                    ]
+                    if not install_script:
+                        return jsonify({"success": False, "error": "No install script found!"}), 400
 
-                    result = subprocess.run(command, capture_output=True, text=True, check=True)
+                    result = subprocess.run(install_script, shell=True, capture_output=True, text=True, check=True)
+
 
                     # ✅ Set installed = true and save the file
                     app['installed'] = True
@@ -594,6 +575,7 @@ def install_app_route(app_name):
         return jsonify({"success": False, "error": e.stderr.strip()})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=9900)

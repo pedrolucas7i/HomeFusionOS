@@ -1,250 +1,118 @@
 {
+    "storage": [
+        {
+            "name": "Nextcloud",
+            "namespace": "storage",
+            "description": "Personal cloud platform for file sync, sharing, and collaboration.",
+            "docker_image": "nextcloud",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/nextcloud",
+            "install_script": "docker run -d -p 8003:80 --name Nextcloud nextcloud",
+            "port": "8003"
+        }
+    ],
     "network": [
         {
             "name": "pi-hole",
             "namespace": "network",
-            "description": "Network-wide ad and tracker blocker for local DNS.",
+            "description": "Network-wide ad and tracker blocker for local DNS resolution.",
             "docker_image": "pihole/pihole",
-            "installed": true,
-            "icon_url": "https://cdn.simpleicons.org/pihole",
-            "install_script": "docker run -d -p 8002:80 --name pi-hole pi-hole"
-        },
-        {
-            "name": "adguard-home",
-            "namespace": "network",
-            "description": "Alternative to Pi-hole with simple setup and secure DNS.",
-            "docker_image": "adguard/adguardhome",
             "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/adguard",
-            "install_script": "docker run -d -p 8003:80 --name adguard-home adguard-home"
-        },
-        {
-            "name": "tailscale",
-            "namespace": "network",
-            "description": "Peer-to-peer VPN for secure and easy access to your home network.",
-            "docker_image": "tailscale/tailscale",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/tailscale",
-            "install_script": "docker run -d -p 8004:80 --name tailscale tailscale"
-        }
-    ],
-    "web": [
-        {
-            "name": "nginx-proxy-manager",
-            "namespace": "web",
-            "description": "Reverse proxy manager with easy SSL support and web UI.",
-            "docker_image": "jc21/nginx-proxy-manager",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/nginxproxymanager",
-            "install_script": "docker run -d -p 8005:80 --name nginx-proxy-manager nginx-proxy-manager"
-        }
-    ],
-    "storage": [
-        {
-            "name": "nextcloud",
-            "namespace": "storage",
-            "description": "Personal cloud with file sync, contacts, calendar, notes, and more.",
-            "docker_image": "nextcloud",
-            "installed": true,
-            "icon_url": "https://cdn.simpleicons.org/nextcloud",
-            "install_script": "docker run -d -p 8006:80 --name nextcloud nextcloud"
-        },
-        {
-            "name": "syncthing",
-            "namespace": "storage",
-            "description": "Decentralized file sync between devices over peer-to-peer.",
-            "docker_image": "syncthing/syncthing",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/syncthing",
-            "install_script": "docker run -d -p 8007:80 --name syncthing syncthing"
-        }
-    ],
-    "backup": [
-        {
-            "name": "duplicati",
-            "namespace": "backup",
-            "description": "Encrypted, compressed, and versioned backups with web interface.",
-            "docker_image": "duplicati/duplicati",
-            "installed": true,
-            "icon_url": "https://cdn.simpleicons.org/duplicati",
-            "install_script": "docker run -d -p 8009:80 --name duplicati duplicati"
+            "icon_url": "https://cdn.simpleicons.org/pi-hole",
+            "install_script": "docker run -d -p 8006:80 --name pi-hole pihole/pihole",
+            "port": "8006"
         }
     ],
     "media": [
         {
-            "name": "jellyfin",
+            "name": "Jellyfin",
             "namespace": "media",
-            "description": "Open-source media server for streaming movies, shows, and music.",
+            "description": "Open-source media server for streaming movies, TV, and music.",
             "docker_image": "jellyfin/jellyfin",
             "installed": false,
             "icon_url": "https://cdn.simpleicons.org/jellyfin",
-            "install_script": "docker run -d -p 8010:80 --name jellyfin jellyfin"
-        }
-    ],
-    "media-automation": [
-        {
-            "name": "sonarr",
-            "namespace": "media-automation",
-            "description": "TV show download automation tool with torrent and Usenet integration.",
-            "docker_image": "sonarr/sonarr",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/sonarr",
-            "install_script": "docker run -d -p 8011:80 --name sonarr sonarr"
-        },
-        {
-            "name": "radarr",
-            "namespace": "media-automation",
-            "description": "Movie download automation and library management tool.",
-            "docker_image": "radarr/radarr",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/radarr",
-            "install_script": "docker run -d -p 8012:80 --name radarr radarr"
-        }
-    ],
-    "downloads": [
-        {
-            "name": "qbittorrent-nox",
-            "namespace": "downloads",
-            "description": "Lightweight web-based torrent client ideal for servers.",
-            "docker_image": "linuxserver/qbittorrent",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/qbittorrent",
-            "install_script": "docker run -d -p 8013:80 --name qbittorrent-nox qbittorrent-nox"
-        }
-    ],
-    "music": [
-        {
-            "name": "navidrome",
-            "namespace": "music",
-            "description": "Self-hosted music streaming server compatible with Subsonic clients.",
-            "docker_image": "navidrome/navidrome",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/navidrome",
-            "install_script": "docker run -d -p 8014:80 --name navidrome navidrome"
-        }
-    ],
-    "monitoring": [
-        {
-            "name": "grafana",
-            "namespace": "monitoring",
-            "description": "Analytics and interactive dashboards with Prometheus support.",
-            "docker_image": "grafana/grafana",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/grafana",
-            "install_script": "docker run -d -p 8015:80 --name grafana grafana"
-        },
-        {
-            "name": "netdata",
-            "namespace": "monitoring",
-            "description": "Real-time system and network monitoring with beautiful charts.",
-            "docker_image": "netdata/netdata",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/netdata",
-            "install_script": "docker run -d -p 8016:80 --name netdata netdata"
-        },
-        {
-            "name": "uptime-kuma",
-            "namespace": "monitoring",
-            "description": "Self-hosted monitoring tool for uptime with alerts and sleek UI.",
-            "docker_image": "louislam/uptime-kuma",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/uptimekuma",
-            "install_script": "docker run -d -p 8017:80 --name uptime-kuma uptime-kuma"
-        }
-    ],
-    "docker": [
-        {
-            "name": "portainer",
-            "namespace": "docker",
-            "description": "Web UI for managing Docker containers and environments.",
-            "docker_image": "portainer/portainer",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/portainer",
-            "install_script": "docker run -d -p 8018:80 --name portainer portainer"
-        },
-        {
-            "name": "watchtower",
-            "namespace": "docker",
-            "description": "Automatic updates for Docker containers running in the background.",
-            "docker_image": "containrrr/watchtower",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/watchtower",
-            "install_script": "docker run -d -p 8019:80 --name watchtower watchtower"
-        }
-    ],
-    "security": [
-        {
-            "name": "vaultwarden",
-            "namespace": "security",
-            "description": "Lightweight self-hosted password manager compatible with Bitwarden.",
-            "docker_image": "vaultwarden/server",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/vaultwarden",
-            "install_script": "docker run -d -p 8020:80 --name vaultwarden vaultwarden"
+            "install_script": "docker run -d -p 8022:8096 -p 8922:8920 --name Jellyfin jellyfin/jellyfin",
+            "port": "80022"
         }
     ],
     "automation": [
         {
-            "name": "home-assistant",
+            "name": "Home Assistant",
             "namespace": "automation",
-            "description": "Open-source home automation platform with broad device support.",
-            "docker_image": "homeassistant/home-assistant",
+            "description": "Open-source home automation platform for smart home devices.",
+            "docker_image": "ghcr.io/home-assistant/home-assistant:stable",
             "installed": false,
             "icon_url": "https://cdn.simpleicons.org/homeassistant",
-            "install_script": "docker run -d -p 8021:80 --name home-assistant home-assistant"
-        }
-    ],
-    "documents": [
-        {
-            "name": "paperless-ngx",
-            "namespace": "documents",
-            "description": "Document management system with OCR and search indexing.",
-            "docker_image": "paperless-ngx/paperless-ngx",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/paperlessngx",
-            "install_script": "docker run -d -p 8022:80 --name paperless-ngx paperless-ngx"
-        }
-    ],
-    "search": [
-        {
-            "name": "searxng",
-            "namespace": "search",
-            "description": "Privacy-respecting metasearch engine aggregating multiple sources.",
-            "docker_image": "searxng/searxng",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/searxng",
-            "install_script": "docker run -d -p 8023:80 --name searxng searxng"
-        }
-    ],
-    "finance": [
-        {
-            "name": "firefly-iii",
-            "namespace": "finance",
-            "description": "Personal finance manager for budgets, accounts, and transactions.",
-            "docker_image": "firefly-iii/firefly-iii",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/fireflyiii",
-            "install_script": "docker run -d -p 8024:80 --name firefly-iii firefly-iii"
+            "install_script": "docker run -d -p 8123:8123 --name HomeAssistant ghcr.io/home-assistant/home-assistant:stable",
+            "port": "8123"
         }
     ],
     "dev": [
         {
-            "name": "gitea",
+            "name": "code-server",
             "namespace": "dev",
-            "description": "Lightweight self-hosted Git server for managing code repositories.",
+            "description": "Run Visual Studio Code in the browser for remote development.",
+            "docker_image": "linuxserver/code-server",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/code-server",
+            "install_script": "docker run -d -p 8011:8443 --name code-server linuxserver/code-server",
+            "port": "8011"
+        },
+        {
+            "name": "Gitea",
+            "namespace": "dev",
+            "description": "Self-hosted Git service for managing code repositories.",
             "docker_image": "gitea/gitea",
             "installed": false,
             "icon_url": "https://cdn.simpleicons.org/gitea",
-            "install_script": "docker run -d -p 8025:80 --name gitea gitea"
+            "install_script": "docker run -d -p 8012:3000 --name Gitea gitea/gitea",
+            "port": "8012"
+        }
+    ],
+    "utilities": [
+        {
+            "name": "Calibre Web",
+            "namespace": "utilities",
+            "description": "Web-based ebook management and reading interface.",
+            "docker_image": "linuxserver/calibre-web",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/calibreweb",
+            "install_script": "docker run -d -p 8018:8083 --name CalibreWeb linuxserver/calibre-web",
+            "port": "8018"
+        }
+    ],
+    "browsers": [
+        {
+            "name": "Firefox",
+            "namespace": "browsers",
+            "description": "Mozilla Firefox web browser running in a container.",
+            "docker_image": "jlesage/firefox",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/firefox",
+            "install_script": "docker run -d -p 8020:5800 --name Firefox jlesage/firefox",
+            "port": "8020"
         },
         {
-            "name": "code-server",
-            "namespace": "dev",
-            "description": "Run VS Code in the browser for remote development access.",
-            "docker_image": "coder/code-server",
+            "name": "Tor Browser",
+            "namespace": "browsers",
+            "description": "Tor Browser for anonymous browsing with built-in privacy tools.",
+            "docker_image": "domistyle/tor-browser",
             "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/codeserver",
-            "install_script": "docker run -d -p 8026:80 --name code-server code-server"
+            "icon_url": "https://cdn.simpleicons.org/torbrowser",
+            "install_script": "docker run -d -p 5800:5800 domistyle/tor-browser",
+            "port": "5800"
+        }
+    ],
+    "cms": [
+        {
+            "name": "WordPress",
+            "namespace": "cms",
+            "description": "Popular content management system for building websites and blogs.",
+            "docker_image": "wordpress",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/wordpress",
+            "install_script": "docker run -d -p 8023:80 --name WordPress wordpress",
+            "port": "8023"
         }
     ]
 }

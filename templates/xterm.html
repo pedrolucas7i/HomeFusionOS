@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>xterm.js Web Terminal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io/client-dist/socket.io.js"></script>
+    <style>
+        body { margin: 0; background: black; overflow: hidden;}
+        #shell { height: calc(100vh - 30px); width: calc(100vw - 30px); margin: 15px; overflow: hidden;}
+        #shell div { height: 100vh; width: 100vw; overflow: hidden;}
+    </style>
+</head>
+<body>
+    <div id="shell"></div>
+    <script>
+        const term = new Terminal();
+        const socket = io();
+
+        term.open(document.getElementById('shell'));
+        term.focus();
+
+        term.onData(data => {
+            socket.emit('shell_input', data);
+        });
+
+        socket.on('shell_output', data => {
+            term.write(data);
+        });
+    </script>
+</body>
+</html>

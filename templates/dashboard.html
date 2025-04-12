@@ -91,7 +91,7 @@
   var app_run = false;
   function prompt() {
     if (!app_run) {
-      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./prompt' frameborder='0'></iframe>";
+      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./shell' frameborder='0'></iframe>";
       setTimeout(function () {
         document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
       }, 10); 
