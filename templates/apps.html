@@ -40,6 +40,12 @@
             margin-bottom: 20px;
         }
 
+        .port-info {
+            font-size: 0.85rem;
+            color: #cccccc;
+            margin-top: 0.5rem;
+        }
+
         /* Adjustments for smaller screens */
         @media (max-width: 767px) {
             .app-card {
@@ -115,6 +121,10 @@
                         <div class="app-info flex-grow-1">
                             <h5 class="mb-1 text-light">{{ app.name }}</h5>
                             <p class="mb-2 text-muted">{{ app.description }}</p>
+
+                            <!-- Display port information -->
+                            <div class="port-info">Port: {{ app.port }}</div>
+
                             {% if app.installed == false %}
                                 <button class="btn btn-success install-btn" style="height: 50px;" onclick="installApp('{{ app.name }}', this)">Install</button>
                                 <div class="status text-info"></div>

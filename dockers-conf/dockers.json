@@ -1,185 +1,130 @@
 {
     "storage": [
-      {
-        "name": "Nextcloud",
-        "namespace": "storage",
-        "description": "Personal cloud platform for file sync, sharing, and collaboration.",
-        "docker_image": "nextcloud",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/nextcloud",
-        "install_script": "docker run -d -p 8080:80 --name nextcloud nextcloud"
-      }
+        {
+            "name": "Nextcloud",
+            "namespace": "storage",
+            "description": "Personal cloud platform for file sync, sharing, and collaboration.",
+            "docker_image": "nextcloud",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/nextcloud",
+            "install_script": "docker run -d -p 8003:80 --name Nextcloud nextcloud",
+            "port": "8003"
+        }
     ],
     "network": [
-      {
-        "name": "AdGuard",
-        "namespace": "network",
-        "description": "Network‑wide ad blocker and privacy solution.",
-        "docker_image": "adguard/adguardhome",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/adguard",
-        "install_script": "docker run -d -p 8081:80 --name adguard adguard/adguardhome"
-      },
-      {
-        "name": "pi-hole",
-        "namespace": "network",
-        "description": "Network‑wide ad and tracker blocker for local DNS resolution.",
-        "docker_image": "pihole/pihole",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/pihole",
-        "install_script": "docker run -d -p 8082:80 --name pi-hole pihole/pihole"
-      }
+        {
+            "name": "pi-hole",
+            "namespace": "network",
+            "description": "Network-wide ad and tracker blocker for local DNS resolution.",
+            "docker_image": "pihole/pihole",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/pi-hole",
+            "install_script": "docker run -d -p 8006:80 --name pi-hole pihole/pihole",
+            "port": "8006"
+        }
     ],
     "security": [
-      {
-        "name": "Bitwarden",
-        "namespace": "security",
-        "description": "Self‑hosted password manager compatible with Bitwarden.",
-        "docker_image": "vaultwarden/server",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/bitwarden",
-        "install_script": "docker run -d -p 8083:80 --name bitwarden vaultwarden/server"
-      }
+        {
+            "name": "Bitwarden",
+            "namespace": "security",
+            "description": "Self-hosted password manager compatible with Bitwarden.",
+            "docker_image": "vaultwarden/server",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/bitwarden",
+            "install_script": "docker run -d -p 8007:80 --name Bitwarden vaultwarden/server",
+            "port": "8007"
+        }
     ],
     "media": [
-      {
-        "name": "Plex",
-        "namespace": "media",
-        "description": "Media server solution for streaming your personal media collection.",
-        "docker_image": "plexinc/pms-docker",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/plex",
-        "install_script": "docker run -d -p 32400:32400 --name plex plexinc/pms-docker"
-      },
-      {
-        "name": "Jellyfin",
-        "namespace": "media",
-        "description": "Open‑source media server for streaming movies, TV, and music.",
-        "docker_image": "jellyfin/jellyfin",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/jellyfin",
-        "install_script": "docker run -d -p 8084:80 --name jellyfin jellyfin/jellyfin"
-      }
+        {
+            "name": "Jellyfin",
+            "namespace": "media",
+            "description": "Open-source media server for streaming movies, TV, and music.",
+            "docker_image": "jellyfin/jellyfin",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/jellyfin",
+            "install_script": "docker run -d -p 8022:8096 -p 8922:8920 --name Jellyfin jellyfin/jellyfin",
+            "port": "80022"
+        }
     ],
     "automation": [
-      {
-        "name": "Home Assistant",
-        "namespace": "automation",
-        "description": "Open‑source home automation platform for smart home devices.",
-        "docker_image": "homeassistant/home-assistant",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/homeassistant",
-        "install_script": "docker run -d -p 8085:80 --name home-assistant homeassistant/home-assistant"
-      }
+        {
+            "name": "Home Assistant",
+            "namespace": "automation",
+            "description": "Open-source home automation platform for smart home devices.",
+            "docker_image": "ghcr.io/home-assistant/home-assistant:stable",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/homeassistant",
+            "install_script": "docker run -d -p 8123:8123 --name HomeAssistant ghcr.io/home-assistant/home-assistant:stable",
+            "port": "8123"
+        }
     ],
     "dev": [
-      {
-        "name": "code-server",
-        "namespace": "dev",
-        "description": "Run Visual Studio Code in the browser for remote development.",
-        "docker_image": "coder/code-server",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/codeserver",
-        "install_script": "docker run -d -p 8086:80 --name code-server coder/code-server"
-      },
-      {
-        "name": "Gitea",
-        "namespace": "dev",
-        "description": "Self‑hosted Git service for managing code repositories.",
-        "docker_image": "gitea/gitea",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/gitea",
-        "install_script": "docker run -d -p 8087:80 --name gitea gitea/gitea"
-      }
-    ],
-    "crypto": [
-      {
-        "name": "Bitcoin Node",
-        "namespace": "crypto",
-        "description": "Run a full Bitcoin node for blockchain validation and network support.",
-        "docker_image": "ruimarinho/bitcoin-core",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/bitcoin",
-        "install_script": "docker run -d -p 8333:8333 --name bitcoin-node ruimarinho/bitcoin-core"
-      },
-      {
-        "name": "Monero Node",
-        "namespace": "crypto",
-        "description": "Full node for the Monero cryptocurrency network.",
-        "docker_image": "monero",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/monero",
-        "install_script": "docker run -d -p 18080:18080 --name monero-node monero"
-      }
+        {
+            "name": "code-server",
+            "namespace": "dev",
+            "description": "Run Visual Studio Code in the browser for remote development.",
+            "docker_image": "linuxserver/code-server",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/code-server",
+            "install_script": "docker run -d -p 8011:8443 --name code-server linuxserver/code-server",
+            "port": "8011"
+        },
+        {
+            "name": "Gitea",
+            "namespace": "dev",
+            "description": "Self-hosted Git service for managing code repositories.",
+            "docker_image": "gitea/gitea",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/gitea",
+            "install_script": "docker run -d -p 8012:3000 --name Gitea gitea/gitea",
+            "port": "8012"
+        }
     ],
     "utilities": [
-      {
-        "name": "LlamaGPT",
-        "namespace": "utilities",
-        "description": "Self‑hosted LLaMA‑based GPT interface for local AI processing.",
-        "docker_image": "llamagpt/llamagpt",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/llama",
-        "install_script": "docker run -d -p 8088:80 --name llamagpt llamagpt/llamagpt"
-      },
-      {
-        "name": "Calibre Web",
-        "namespace": "utilities",
-        "description": "Web‑based ebook management and reading interface.",
-        "docker_image": "linuxserver/calibre-web",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/calibre",
-        "install_script": "docker run -d -p 8089:80 --name calibre-web linuxserver/calibre-web"
-      },
-      {
-        "name": "LibreOffice Online",
-        "namespace": "utilities",
-        "description": "Collaborative online office suite based on LibreOffice.",
-        "docker_image": "libreoffice/online",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/libreoffice",
-        "install_script": "docker run -d -p 8090:80 --name libreoffice libreoffice/online"
-      }
+        {
+            "name": "Calibre Web",
+            "namespace": "utilities",
+            "description": "Web-based ebook management and reading interface.",
+            "docker_image": "linuxserver/calibre-web",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/calibreweb",
+            "install_script": "docker run -d -p 8018:8083 --name CalibreWeb linuxserver/calibre-web",
+            "port": "8018"
+        }
     ],
     "browsers": [
-      {
-        "name": "Firefox",
-        "namespace": "browsers",
-        "description": "Mozilla Firefox web browser running in a container.",
-        "docker_image": "jlesage/firefox",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/firefox",
-        "install_script": "docker run -d -p 8091:5800 --name firefox jlesage/firefox"
-      },
-      {
-        "name": "Brave",
-        "namespace": "browsers",
-        "description": "Privacy‑focused web browser container for secure browsing.",
-        "docker_image": "linuxserver/brave-browser",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/brave",
-        "install_script": "docker run -d -p 8092:5800 --name brave linuxserver/brave-browser"
-      },
-      {
-        "name": "Tor Browser",
-        "namespace": "browsers",
-        "description": "Tor Browser for anonymous browsing with built‑in privacy tools.",
-        "docker_image": "jlesage/tor-browser",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/tor",
-        "install_script": "docker run -d -p 8093:5800 --name tor-browser jlesage/tor-browser"
-      }
+        {
+            "name": "Firefox",
+            "namespace": "browsers",
+            "description": "Mozilla Firefox web browser running in a container.",
+            "docker_image": "jlesage/firefox",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/firefox",
+            "install_script": "docker run -d -p 8020:5800 --name Firefox jlesage/firefox",
+            "port": "8020"
+        },
+        {
+            "name": "Tor Browser",
+            "namespace": "browsers",
+            "description": "Tor Browser for anonymous browsing with built-in privacy tools.",
+            "docker_image": "domistyle/tor-browser",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/torbrowser",
+            "install_script": "docker run -d -p 5800:5800 domistyle/tor-browser",
+            "port": "5800"
+        }
     ],
     "cms": [
-      {
-        "name": "WordPress",
-        "namespace": "cms",
-        "description": "Popular content management system for building websites and blogs.",
-        "docker_image": "wordpress",
-        "installed": false,
-        "icon_url": "https://cdn.simpleicons.org/wordpress",
-        "install_script": "docker run -d -p 8094:80 --name wordpress wordpress"
-      }
+        {
+            "name": "WordPress",
+            "namespace": "cms",
+            "description": "Popular content management system for building websites and blogs.",
+            "docker_image": "wordpress",
+            "installed": false,
+            "icon_url": "https://cdn.simpleicons.org/wordpress",
+            "install_script": "docker run -d -p 8023:80 --name WordPress wordpress",
+            "port": "8023"
+        }
     ]
-  }
-  
+}
