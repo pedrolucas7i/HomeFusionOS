@@ -9,12 +9,15 @@ import getpass
 import socket
 import pymysql
 import time
+import json
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from collections import defaultdict
+
 
 load_dotenv()
 
@@ -27,6 +30,38 @@ HOST_DB = os.environ.get('HOST_DB', 'localhost')
 USER_DB = os.environ.get('USER_DB', 'root')
 PASS_DB = os.environ.get('PASS_DB', '')
 DB = os.environ.get('DB', 'homefusionOS')
+
+OFFLINE_JSON_PATH = "dockers-conf/dockers.json"
+apps_data = []
+app_ports = {}
+
+ICON_OVERRIDES = {
+    "pi-hole": "pihole",
+    "adguard-home": "adguard",
+    "tailscale": "tailscale",
+    "nginx-proxy-manager": "nginxproxymanager",
+    "nextcloud": "nextcloud",
+    "syncthing": "syncthing",
+    "duplicati": "duplicati",
+    "jellyfin": "jellyfin",
+    "sonarr": "sonarr",
+    "radarr": "radarr",
+    "qbittorrent-nox": "qbittorrent",
+    "navidrome": "navidrome",
+    "grafana": "grafana",
+    "netdata": "netdata",
+    "uptime-kuma": "uptimekuma",
+    "portainer": "portainer",
+    "watchtower": "watchtower",
+    "vaultwarden": "vaultwarden",
+    "home-assistant": "homeassistant",
+    "paperless-ngx": "paperlessngx",
+    "searxng": "searxng",
+    "firefly-iii": "fireflyiii",
+    "gitea": "gitea",
+    "code-server": "codeserver"
+}
+
 
 # Function to check and create the database if it doesn't exist
 def create_database_if_not_exists():
@@ -74,11 +109,27 @@ with app.app_context():
     db.create_all()
 
 # Helper function to create a new user
-def create_new_user(username, password):
-    hashed_password = generate_password_hash(password)  # Default method is 'pbkdf2:sha256'
+def create_user(username, password):
+    hashed_password = generate_password_hash(password)
     new_user = User(username=username, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
+
+def update_password(username, new_password):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user.password = generate_password_hash(new_password)
+        db.session.commit()
+    else:
+        print("User not found.")
+
+def delete_user(username):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+    else:
+        print("User not found")
 
 # Check for the first user and create one if it doesn't exist
 def check_and_create_first_user():
@@ -87,6 +138,32 @@ def check_and_create_first_user():
         print("No user found. Creating default admin user.")
         create_new_user('admin', 'adminpassword')  # Create a default admin user
         print("Default admin user created.")
+
+def get_users():
+    return User.query.all()
+
+def get_running_docker_containers():
+    """Obtém uma lista de containers Docker em execução com suas portas mapeadas."""
+    try:
+        # Executa o comando docker ps para listar containers e suas portas
+        result = subprocess.run(['docker', 'ps', '--format', '{{.Names}} {{.Ports}}'], 
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        # Divide a saída por linhas (cada linha é um container com o nome e as portas)
+        containers = result.stdout.splitlines()
+        
+        # Cria um dicionário com o nome do container e a porta mapeada
+        container_info = {}
+        for container in containers:
+            parts = container.split()
+            name = parts[0]
+            ports = parts[1] if len(parts) > 1 else "No ports"
+            container_info[name] = ports
+        
+        return container_info
+    except subprocess.CalledProcessError as e:
+        print(f"Erro ao listar containers Docker: {e}")
+        return {}
 
 with app.app_context():
     check_and_create_first_user()  # Ensure a user exists when the app starts
@@ -316,48 +393,6 @@ def method_not_allowed(e):
     # Caso contrário, delegar ao manipulador global ou retornar uma resposta padrão
     return "Method Not Allowed", 405
 
-@app.route('/user_management', methods=['GET', 'POST'])
-def user_management():
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    users = get_all_users()
-    if users is None:
-        users = []
-    return render_template('user_management.html', users=users)
-
-@app.route('/delete_user/<int:user_id>', methods=['POST'])
-def delete_user_route(user_id):
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    try:
-        delete_user(user_id)
-        flash('User deleted successfully!', 'success')
-    except Exception as e:
-        flash(str(e), 'danger')
-    return redirect(url_for('user_management'))
-
-@app.route('/update_password/<int:user_id>', methods=['POST'])
-def update_password_route(user_id):
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    new_password = request.form['new_password']
-    update_user_password(user_id, new_password)
-    flash('Password updated successfully!', 'success')
-    return redirect(url_for('user_management'))
-
-@app.route('/create_user', methods=['POST'])
-def create_user_route():
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    username = request.form['username']
-    password = request.form['password']
-    create_user(username, password)
-    flash('User created successfully!', 'success')
-    return redirect(url_for('user_management'))
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
@@ -368,7 +403,27 @@ def settings():
     if not user_id:
         return redirect(url_for('login'))
 
-    return render_template('settings.html')
+    if request.method == 'POST':
+        if 'create_new_user' in request.form:
+            username = request.form['new_username']
+            password = request.form['new_password']
+            print(f"Creating user: {username} Password: {password}")
+            create_user(username, password)
+
+        elif 'update_password' in request.form:
+            username = request.form['user_username']
+            password = request.form['new_password']
+            print(f"Updating {username} password to: {password}")
+            update_password(username, password)
+
+        elif 'delete_user' in request.form:
+            username = request.form['username_to_delete']
+            print(f"Deleting user: {username}")
+            delete_user(username)
+
+        return redirect(url_for('settings'))
+
+    return render_template('settings.html', users=get_users())
 
 @app.route('/prompt', methods=['GET', 'POST'])
 def prompt():
@@ -397,21 +452,121 @@ def prompt():
                            userhostfile=userhostfile,
                            output="")
 
-@app.route('/apps')
-def apps():
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
-    
-    return render_template('apps.html')
+# Function to get icons using Simple Icons
+def get_icon_url(name):
+    clean_name = name.lower()
+    formatted = ICON_OVERRIDES.get(clean_name, clean_name.replace(" ", "").replace(".", ""))
+    return f"https://cdn.simpleicons.org/{formatted}"
 
-@app.route('/apps/<string:app_name>')
-def apps2():
-    if 'logged_in' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('login'))
+
+# Load apps from local JSON file
+def load_offline_apps():
+    global apps_data
+    if not apps_data:
+        try:
+            with open(OFFLINE_JSON_PATH, "r", encoding="utf-8") as f:
+                raw_data = json.load(f)
+                grouped = defaultdict(list)
+
+                for app in raw_data:
+                    app["icon_url"] = get_icon_url(app["name"])
+                    grouped[app["namespace"]].append(app)
+
+                apps_data = grouped
+                print(f"Loaded {sum(len(v) for v in grouped.values())} apps from local file.")
+        except Exception as e:
+            print(f"Error reading JSON file: {e}")
+            apps_data = defaultdict(list)
+    return apps_data
+
+# Function to generate a Docker install script
+def generate_install_script(app_name, app_port):
+    return f"docker run -d -p {app_port}:80 --name {app_name} {app_name}"
+
+# Function to check if a port is in use
+def is_port_in_use(port):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(('127.0.0.1', port)) == 0
+    except Exception as e:
+        print(f"Error checking port {port}: {e}")
+        return True
+
+# Generate a unique port
+def generate_unique_port(start_port=8000, end_port=9999):
+    used_ports = set(app_ports.values())
+    for port in range(start_port, end_port):
+        if port not in used_ports and not is_port_in_use(port):
+            return port
+    raise Exception("No available ports in the range!")
+
+# Get or assign a port for an app
+def get_app_port(app_name):
+    if app_name not in app_ports:
+        app_ports[app_name] = generate_unique_port()
+    return app_ports[app_name]
+
+@app.route('/apps')
+def all_apps():
+    apps_by_namespace = load_offline_apps()
     
-    return render_template('dashboard.html')
+    # Add install scripts
+    for namespace, apps in apps_by_namespace.items():
+        for app in apps:
+            port = get_app_port(app['name'])
+            app["install_script"] = generate_install_script(app['name'], port)
+
+    return render_template('apps.html', apps_by_namespace=apps_by_namespace)
+
+
+# Show details of a selected app
+@app.route('/app/<app_name>')
+def app_details(app_name):
+    for app in load_offline_apps():
+        if app['name'].lower() == app_name.lower():
+            port = get_app_port(app['name'])
+            script = generate_install_script(app['name'], port)
+            return render_template('apps.html', app=app, install_script=script)
+    return "App not found!", 404
+
+# Fetch all apps (used for refresh or frontend calls)
+@app.route('/fetch_new_apps')
+def fetch_new_apps():
+    return jsonify(load_offline_apps())
+
+# Search apps
+@app.route('/search', methods=['GET'])
+def search():
+    search_value = request.args.get('search-value', '').strip().lower()
+    filtered = defaultdict(list)
+
+    for namespace, apps in load_offline_apps().items():
+        for app in apps:
+            if search_value in app['name'].lower():
+                port = get_app_port(app['name'])
+                app_copy = app.copy()
+                app_copy["install_script"] = generate_install_script(app['name'], port)
+                filtered[namespace].append(app_copy)
+
+    return render_template('apps.html', apps_by_namespace=filtered)
+
+
+# Install app via Docker
+@app.route('/install/<app_name>', methods=['POST'])
+def install_app_route(app_name):
+    try:
+        for app in load_offline_apps():
+            if app['name'].lower() == app_name.lower():
+                port = get_app_port(app['name'])
+                command = ["docker", "run", "-d", "-p", f"{port}:80", "--name", app_name, app_name]
+                result = subprocess.run(command, capture_output=True, text=True, check=True)
+                return jsonify({"success": True, "output": result.stdout.strip()})
+        return jsonify({"success": False, "error": "App not found!"}), 404
+
+    except subprocess.CalledProcessError as e:
+        return jsonify({"success": False, "error": e.stderr.strip()})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=9900)
