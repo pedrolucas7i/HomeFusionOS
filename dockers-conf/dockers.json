@@ -1,0 +1,123 @@
+[
+    {
+      "name": "pi-hole",
+      "namespace": "network",
+      "description": "Network-wide ad and tracker blocker for local DNS."
+    },
+    {
+      "name": "adguard-home",
+      "namespace": "network",
+      "description": "Alternative to Pi-hole with simple setup and secure DNS."
+    },
+    {
+      "name": "tailscale",
+      "namespace": "network",
+      "description": "Peer-to-peer VPN for secure and easy access to your home network."
+    },
+    {
+      "name": "nginx-proxy-manager",
+      "namespace": "web",
+      "description": "Reverse proxy manager with easy SSL support and web UI."
+    },
+    {
+      "name": "nextcloud",
+      "namespace": "storage",
+      "description": "Personal cloud with file sync, contacts, calendar, notes, and more."
+    },
+    {
+      "name": "syncthing",
+      "namespace": "storage",
+      "description": "Decentralized file sync between devices over peer-to-peer."
+    },
+    {
+      "name": "duplicati",
+      "namespace": "backup",
+      "description": "Encrypted, compressed, and versioned backups with web interface."
+    },
+    {
+      "name": "jellyfin",
+      "namespace": "media",
+      "description": "Open-source media server for streaming movies, shows, and music."
+    },
+    {
+      "name": "sonarr",
+      "namespace": "media-automation",
+      "description": "TV show download automation tool with torrent and Usenet integration."
+    },
+    {
+      "name": "radarr",
+      "namespace": "media-automation",
+      "description": "Movie download automation and library management tool."
+    },
+    {
+      "name": "qbittorrent-nox",
+      "namespace": "downloads",
+      "description": "Lightweight web-based torrent client ideal for servers."
+    },
+    {
+      "name": "navidrome",
+      "namespace": "music",
+      "description": "Self-hosted music streaming server compatible with Subsonic clients."
+    },
+    {
+      "name": "grafana",
+      "namespace": "monitoring",
+      "description": "Analytics and interactive dashboards with Prometheus support."
+    },
+    {
+      "name": "netdata",
+      "namespace": "monitoring",
+      "description": "Real-time system and network monitoring with beautiful charts."
+    },
+    {
+      "name": "uptime-kuma",
+      "namespace": "monitoring",
+      "description": "Self-hosted monitoring tool for uptime with alerts and sleek UI."
+    },
+    {
+      "name": "portainer",
+      "namespace": "docker",
+      "description": "Web UI for managing Docker containers and environments."
+    },
+    {
+      "name": "watchtower",
+      "namespace": "docker",
+      "description": "Automatic updates for Docker containers running in the background."
+    },
+    {
+      "name": "vaultwarden",
+      "namespace": "security",
+      "description": "Lightweight self-hosted password manager compatible with Bitwarden."
+    },
+    {
+      "name": "home-assistant",
+      "namespace": "automation",
+      "description": "Open-source home automation platform with broad device support."
+    },
+    {
+      "name": "paperless-ngx",
+      "namespace": "documents",
+      "description": "Document management system with OCR and search indexing."
+    },
+    {
+      "name": "searxng",
+      "namespace": "search",
+      "description": "Privacy-respecting metasearch engine aggregating multiple sources."
+    },
+    {
+      "name": "firefly-iii",
+      "namespace": "finance",
+      "description": "Personal finance manager for budgets, accounts, and transactions."
+    },
+    {
+      "name": "gitea",
+      "namespace": "dev",
+      "description": "Lightweight self-hosted Git server for managing code repositories."
+    },
+    {
+      "name": "code-server",
+      "namespace": "dev",
+      "description": "Run VS Code in the browser for remote development access."
+    }
+  ]
+  
