@@ -32,7 +32,7 @@ PASS_DB = os.environ.get('PASS_DB', '')
 DB = os.environ.get('DB', 'homefusionOS')
 
 OFFLINE_JSON_PATH = "dockers-conf/dockers.json"
-apps_data = []
+apps_data = defaultdict(list)
 app_ports = {}
 
 ICON_OVERRIDES = {
@@ -452,14 +452,7 @@ def prompt():
                            userhostfile=userhostfile,
                            output="")
 
-# Function to get icons using Simple Icons
-def get_icon_url(name):
-    clean_name = name.lower()
-    formatted = ICON_OVERRIDES.get(clean_name, clean_name.replace(" ", "").replace(".", ""))
-    return f"https://cdn.simpleicons.org/{formatted}"
-
-
-# Load apps from local JSON file
+# Load apps from the local JSON file
 def load_offline_apps():
     global apps_data
     if not apps_data:
@@ -468,8 +461,10 @@ def load_offline_apps():
                 raw_data = json.load(f)
                 grouped = defaultdict(list)
 
-                for app in raw_data:
+                for app in raw_data["network"] + raw_data["web"] + raw_data["storage"] + raw_data["backup"] + raw_data["media"] + raw_data["media-automation"] + raw_data["downloads"] + raw_data["music"] + raw_data["monitoring"] + raw_data["docker"] + raw_data["security"] + raw_data["automation"] + raw_data["documents"] + raw_data["search"] + raw_data["finance"] + raw_data["dev"]:
+                    # Add icon URL
                     app["icon_url"] = get_icon_url(app["name"])
+                    # Add the app to the correct namespace
                     grouped[app["namespace"]].append(app)
 
                 apps_data = grouped
@@ -477,9 +472,16 @@ def load_offline_apps():
         except Exception as e:
             print(f"Error reading JSON file: {e}")
             apps_data = defaultdict(list)
+
     return apps_data
 
-# Function to generate a Docker install script
+# Function to get icon using Simple Icons
+def get_icon_url(name):
+    clean_name = name.lower()
+    formatted = ICON_OVERRIDES.get(clean_name, clean_name.replace(" ", "").replace(".", ""))
+    return f"https://cdn.simpleicons.org/{formatted}"
+
+# Generate the Docker install script
 def generate_install_script(app_name, app_port):
     return f"docker run -d -p {app_port}:80 --name {app_name} {app_name}"
 
@@ -492,7 +494,7 @@ def is_port_in_use(port):
         print(f"Error checking port {port}: {e}")
         return True
 
-# Generate a unique port
+# Generate a unique port for each app
 def generate_unique_port(start_port=8000, end_port=9999):
     used_ports = set(app_ports.values())
     for port in range(start_port, end_port):
@@ -500,17 +502,26 @@ def generate_unique_port(start_port=8000, end_port=9999):
             return port
     raise Exception("No available ports in the range!")
 
+# App ports store
+app_ports = {}
+
 # Get or assign a port for an app
 def get_app_port(app_name):
     if app_name not in app_ports:
         app_ports[app_name] = generate_unique_port()
     return app_ports[app_name]
 
+# Save app data to the local JSON file
+def save_offline_apps(data):
+    with open(OFFLINE_JSON_PATH, "w") as f:
+        json.dump(data, f, indent=4)
+
+# Route to display all apps
 @app.route('/apps')
 def all_apps():
     apps_by_namespace = load_offline_apps()
-    
-    # Add install scripts
+
+    # Add install scripts to apps
     for namespace, apps in apps_by_namespace.items():
         for app in apps:
             port = get_app_port(app['name'])
@@ -518,23 +529,23 @@ def all_apps():
 
     return render_template('apps.html', apps_by_namespace=apps_by_namespace)
 
-
-# Show details of a selected app
+# Route to display details of a specific app
 @app.route('/app/<app_name>')
 def app_details(app_name):
-    for app in load_offline_apps():
-        if app['name'].lower() == app_name.lower():
-            port = get_app_port(app['name'])
-            script = generate_install_script(app['name'], port)
-            return render_template('apps.html', app=app, install_script=script)
+    for namespace, apps in load_offline_apps().items():
+        for app in apps:
+            if app['name'].lower() == app_name.lower():
+                port = get_app_port(app['name'])
+                script = generate_install_script(app['name'], port)
+                return render_template('app_details.html', app=app, install_script=script)
     return "App not found!", 404
 
-# Fetch all apps (used for refresh or frontend calls)
+# Route to fetch all apps (used for refresh or frontend calls)
 @app.route('/fetch_new_apps')
 def fetch_new_apps():
     return jsonify(load_offline_apps())
 
-# Search apps
+# Route to search apps by name
 @app.route('/search', methods=['GET'])
 def search():
     search_value = request.args.get('search-value', '').strip().lower()
@@ -550,17 +561,33 @@ def search():
 
     return render_template('apps.html', apps_by_namespace=filtered)
 
-
-# Install app via Docker
+# Route to install an app via Docker using the docker_image from JSON
 @app.route('/install/<app_name>', methods=['POST'])
 def install_app_route(app_name):
     try:
-        for app in load_offline_apps():
-            if app['name'].lower() == app_name.lower():
-                port = get_app_port(app['name'])
-                command = ["docker", "run", "-d", "-p", f"{port}:80", "--name", app_name, app_name]
-                result = subprocess.run(command, capture_output=True, text=True, check=True)
-                return jsonify({"success": True, "output": result.stdout.strip()})
+        apps_data = load_offline_apps()
+
+        # Search and modify the right app
+        for namespace, app_list in apps_data.items():
+            for app in app_list:
+                if app['name'].lower() == app_name.lower():
+                    docker_image = app['docker_image']
+                    port = get_app_port(app['name'])
+                    clean_name = app['name'].replace("-", "")
+
+                    command = [
+                        "docker", "run", "-d", "-p", f"{port}:80",
+                        "--name", app_name, docker_image
+                    ]
+
+                    result = subprocess.run(command, capture_output=True, text=True, check=True)
+
+                    # ✅ Set installed = true and save the file
+                    app['installed'] = True
+                    save_offline_apps(apps_data)
+
+                    return jsonify({"success": True, "output": result.stdout.strip()})
+
         return jsonify({"success": False, "error": "App not found!"}), 404
 
     except subprocess.CalledProcessError as e:
