@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Home Server App Store</title>
+    <title>HomefusionOS App Store</title>
     <link rel="stylesheet" href="https://bootswatch.com/5/vapor/bootstrap.css">
     <style>
         .app-card {
@@ -20,17 +20,6 @@
             width: 50px;
             height: 50px;
         }
-        code {
-            font-size: 0.85rem;
-            background-color: #444;
-            color: #ccc;
-            border-radius: 5px;
-            padding: 0.5rem;
-            display: block;
-            margin-top: 0.5rem;
-            white-space: nowrap;
-            overflow-x: auto;
-        }
         .status {
             font-size: 0.85rem;
             margin-top: 0.5rem;
@@ -38,12 +27,15 @@
         .install-btn {
             margin-top: 0.5rem;
         }
+        .search-bar {
+            margin-bottom: 20px;
+        }
     </style>
     <script>
         async function installApp(appName, button) {
             button.disabled = true;
             const status = button.closest(".app-info").querySelector(".status");
-            status.textContent = "⚙️ Installing...";
+            status.innerHTML = `<div class="spinner-border text-info spinner-border-sm me-2" role="status"></div> Installing...`;
 
             try {
                 const response = await fetch(`/install/${appName}`, {
@@ -57,10 +49,25 @@
                     status.textContent = "❌ Error: " + result.error;
                 }
             } catch (error) {
+                console.error(error);
                 status.textContent = "❌ Install failed. Try again.";
             }
 
             button.disabled = false;
+        }
+
+        function searchApps() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const appCards = document.querySelectorAll('.app-card');
+
+            appCards.forEach(card => {
+                const appName = card.querySelector('h5').textContent.toLowerCase();
+                if (appName.includes(searchValue)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
     </script>
 </head>
@@ -68,19 +75,27 @@
     <div class="container py-4">
         <h1 class="mb-4 text-center">🧰 HomefusionOS App Store</h1>
 
+        <!-- Live Search Input -->
+        <div class="input-group search-bar">
+            <input type="text" class="form-control" id="searchInput" onkeyup="searchApps()" placeholder="Search apps...">
+        </div>
+
         {% for namespace, apps in apps_by_namespace.items() %}
             <h3 class="mt-4">{{ namespace.replace('-', ' ').title() }}</h3>
             <div class="row">
                 {% for app in apps %}
                 <div class="col-md-6">
                     <div class="app-card d-flex">
-                        <img class="app-icon me-3" src="{{ app.icon_url }}" alt="{{ app.name }} icon">
+                        <img class="app-icon me-3" src="{{ app.icon_url }}" alt="{{ app.name }} application icon">
                         <div class="app-info flex-grow-1">
                             <h5 class="mb-1">{{ app.name }}</h5>
                             <p class="mb-2">{{ app.description }}</p>
-                            <code>{{ app.install_script }}</code>
-                            <button class="btn btn-success install-btn" onclick="installApp('{{ app.name }}', this)">Install</button>
-                            <div class="status text-info"></div>
+                            {% if app.installed == false %}
+                                <button class="btn btn-success install-btn" onclick="installApp('{{ app.name }}', this)">Install</button>
+                                <div class="status text-info"></div>
+                            {% else %}
+                                <div class="status text-success">✅ Already Installed</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
