@@ -10,6 +10,7 @@ import socket
 import pymysql
 import time
 import json
+import requests
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -17,6 +18,8 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from collections import defaultdict
+from flask_socketio import SocketIO, emit
+import os, pty, select, subprocess, getpass, socket, platform, threading
 
 
 load_dotenv()
@@ -24,6 +27,8 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY')  # Make sure the SECRET_KEY is set in .env
 app.config['UPLOAD_FOLDER'] = 'uploads/'
+
+socketio = SocketIO(app)
 
 # Getting the environment variables
 HOST_DB = os.environ.get('HOST_DB', 'localhost')
@@ -430,27 +435,45 @@ def prompt():
     if 'logged_in' not in session:
         flash('Please log in to access this page.', 'danger')
         return redirect(url_for('login'))
+
     user_id = session.get('user_id', None)
     if not user_id:
         return redirect(url_for('login'))
+
     if platform.system() == "Windows":
         userhostfile = os.getcwd() + " $ "
     else:
         userhostfile = getpass.getuser() + "@" + socket.gethostname() + ":/" + os.path.basename(os.getcwd()) + "$ "
-    if request.method == 'POST':
-        command = request.form['command']
-        try:
-            result = subprocess.run(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output = result.stdout.decode("utf-8") + result.stderr.decode("utf-8")
-        except Exception as e:
-            output = str(e)
 
-        return render_template('prompt.html',
-                               userhostfile=userhostfile,
-                               output=output)
-    return render_template('prompt.html',
-                           userhostfile=userhostfile,
-                           output="")
+    return render_template('prompt.html', userhostfile=userhostfile, output="")  # keeping your old prompt.html
+
+@app.route('/shell')
+def terminal():
+    if 'logged_in' not in session:
+        return redirect(url_for('login'))
+    return render_template('xterm.html')
+
+def read_and_emit_output(fd):
+    while True:
+        try:
+            data = os.read(fd, 1024).decode()
+            socketio.emit('shell_output', data)
+        except OSError:
+            break
+
+@socketio.on('shell_input')
+def handle_terminal_input(data):
+    global child_fd
+    os.write(child_fd, data.encode())
+
+@socketio.on('connect')
+def start_terminal():
+    global child_fd
+    pid, child_fd = pty.fork()
+    if pid == 0:
+        os.execvp("bash", ["bash"])
+    else:
+        threading.Thread(target=read_and_emit_output, args=(child_fd,)).start()
 
 # Load apps from the local JSON file
 def load_offline_apps():
