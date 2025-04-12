@@ -23,18 +23,6 @@
             "port": "8006"
         }
     ],
-    "security": [
-        {
-            "name": "Bitwarden",
-            "namespace": "security",
-            "description": "Self-hosted password manager compatible with Bitwarden.",
-            "docker_image": "vaultwarden/server",
-            "installed": false,
-            "icon_url": "https://cdn.simpleicons.org/bitwarden",
-            "install_script": "docker run -d -p 8007:80 --name Bitwarden vaultwarden/server",
-            "port": "8007"
-        }
-    ],
     "media": [
         {
             "name": "Jellyfin",
