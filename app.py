@@ -3,30 +3,34 @@ import platform
 import subprocess
 import bcrypt
 import psutil
-import mysql.connector
 import shutil
 import getpass
 import socket
-import pymysql
 import time
 import json
 import requests
+import re
+import threading
 from datetime import datetime
+from collections import defaultdict
+
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
+from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from collections import defaultdict
-from flask_socketio import SocketIO, emit
-import os, pty, select, subprocess, getpass, socket, platform, threading
-
+from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY')  # Make sure the SECRET_KEY is set in .env
+app.secret_key = os.environ.get('SECRET_KEY')
 app.config['UPLOAD_FOLDER'] = 'uploads/'
+
+# Database configuration for SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homefusionOS.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 socketio = SocketIO(app)
 
@@ -35,39 +39,18 @@ apps_data = defaultdict(list)
 app_ports = {}
 
 ICON_OVERRIDES = {
-    "pi-hole": "pihole",
-    "adguard-home": "adguard",
-    "tailscale": "tailscale",
-    "nginx-proxy-manager": "nginxproxymanager",
-    "nextcloud": "nextcloud",
-    "syncthing": "syncthing",
-    "duplicati": "duplicati",
-    "jellyfin": "jellyfin",
-    "sonarr": "sonarr",
-    "radarr": "radarr",
-    "qbittorrent-nox": "qbittorrent",
-    "navidrome": "navidrome",
-    "grafana": "grafana",
-    "netdata": "netdata",
-    "uptime-kuma": "uptimekuma",
-    "portainer": "portainer",
-    "watchtower": "watchtower",
-    "vaultwarden": "vaultwarden",
-    "home-assistant": "homeassistant",
-    "paperless-ngx": "paperlessngx",
-    "searxng": "searxng",
-    "firefly-iii": "fireflyiii",
-    "gitea": "gitea",
-    "code-server": "codeserver"
+    "pi-hole": "pihole", "adguard-home": "adguard", "tailscale": "tailscale",
+    "nginx-proxy-manager": "nginxproxymanager", "nextcloud": "nextcloud",
+    "syncthing": "syncthing", "duplicati": "duplicati", "jellyfin": "jellyfin",
+    "sonarr": "sonarr", "radarr": "radarr", "qbittorrent-nox": "qbittorrent",
+    "navidrome": "navidrome", "grafana": "grafana", "netdata": "netdata",
+    "uptime-kuma": "uptimekuma", "portainer": "portainer", "watchtower": "watchtower",
+    "vaultwarden": "vaultwarden", "home-assistant": "homeassistant",
+    "paperless-ngx": "paperlessngx", "searxng": "searxng", "firefly-iii": "fireflyiii",
+    "gitea": "gitea", "code-server": "codeserver"
 }
 
-# Configuring the URI for the MariaDB database
-# SQLite 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homefusionOS.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-# Defining models (tables) in MariaDB with SQLAlchemy
+# Database models
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False, unique=True)
@@ -87,7 +70,7 @@ class App(db.Model):
 with app.app_context():
     db.create_all()
 
-# Helper function to create a new user
+# User helpers
 def create_user(username, password):
     hashed_password = generate_password_hash(password)
     new_user = User(username=username, password=hashed_password)
@@ -99,77 +82,24 @@ def update_password(username, new_password):
     if user:
         user.password = generate_password_hash(new_password)
         db.session.commit()
-    else:
-        print("User not found.")
 
 def delete_user(username):
     user = User.query.filter_by(username=username).first()
     if user:
         db.session.delete(user)
         db.session.commit()
-    else:
-        print("User not found")
 
-# Check for the first user and create one if it doesn't exist
 def check_and_create_first_user():
-    first_user = User.query.first()
-    if not first_user:  # If no user exists
+    if not User.query.first():
         print("No user found. Creating default admin user.")
-        create_user('admin', 'adminpassword')  # Create a default admin user
+        create_user('admin', 'adminpassword')
         print("Default admin user created.")
 
 def get_users():
     return User.query.all()
 
-def get_running_docker_containers():
-    """Obtém uma lista de containers Docker em execução com suas portas mapeadas."""
-    try:
-        # Executa o comando docker ps para listar containers e suas portas
-        result = subprocess.run(['docker', 'ps', '--format', '{{.Names}} {{.Ports}}'], 
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
-        # Divide a saída por linhas (cada linha é um container com o nome e as portas)
-        containers = result.stdout.splitlines()
-        
-        # Cria um dicionário com o nome do container e a porta mapeada
-        container_info = {}
-        for container in containers:
-            parts = container.split()
-            name = parts[0]
-            ports = parts[1] if len(parts) > 1 else "No ports"
-            container_info[name] = ports
-        
-        return container_info
-    except subprocess.CalledProcessError as e:
-        print(f"Erro ao listar containers Docker: {e}")
-        return {}
-
 with app.app_context():
-    check_and_create_first_user()  # Ensure a user exists when the app starts
-
-# Login route
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        # Find the user by username
-        user = User.query.filter_by(username=username).first()
-
-        if user and check_password_hash(user.password, password):  # Use check_password_hash
-            # If the user exists and password is correct, set the session
-            session['logged_in'] = True
-            session['user_id'] = user.id
-
-            flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            # If authentication fails, show an error
-            flash('Invalid credentials. Please try again.', 'danger')
-            return render_template('login.html', error=True)
-
-    return render_template('login.html')
+    check_and_create_first_user()
 
 def cpu_usage():
     return psutil.cpu_percent(interval=1)
@@ -179,27 +109,15 @@ def ram_usage():
 
 def get_wifi_signal_percentage(interface='wlan0'):
     try:
-        # Run iwconfig to get information about the interface
         iwconfig_output = subprocess.check_output(['iwconfig', interface]).decode('utf-8')
-        
-        # Look for signal strength in the output
         signal_strength = re.search(r"Signal level=(-\d+)", iwconfig_output)
-        
         if signal_strength:
             rssi = int(signal_strength.group(1))
-            
-            # Convert RSSI to percentage
-            min_rssi = -90  # Minimum signal strength
-            max_rssi = -30  # Maximum signal strength
-            
-            # Map RSSI to percentage (0 to 100)
+            min_rssi, max_rssi = -90, -30
             percentage = ((rssi - min_rssi) / (max_rssi - min_rssi)) * 100
             return round(percentage)
-        else:
-            print("Signal strength not found.")
-            return None
-    except subprocess.CalledProcessError as e:
-        print(f"Error calling iwconfig: {e}")
+        return None
+    except subprocess.CalledProcessError:
         return None
 
 # Dashboard route (protected by login_required)
@@ -208,12 +126,11 @@ def dashboard():
     if 'logged_in' not in session:
         flash('Please log in to access this page.', 'danger')
         return redirect(url_for('login'))
-    
     return render_template('dashboard.html',
-                            cpu_usage=cpu_usage(),
-                            ram_usage=ram_usage(),
-                            wifi_signal=get_wifi_signal_percentage(),
-                            wallpaper='static/wallpapers/homefusionOS.jpg')
+                           cpu_usage=cpu_usage(),
+                           ram_usage=ram_usage(),
+                           wifi_signal=get_wifi_signal_percentage(),
+                           wallpaper='static/wallpapers/homefusionOS.jpg')
 
 # Logout route
 @app.route('/logout')
@@ -373,33 +290,20 @@ def method_not_allowed(e):
     return "Method Not Allowed", 405
 
 
+# Settings and user management routes
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     if 'logged_in' not in session:
         flash('Please log in to access this page.', 'danger')
         return redirect(url_for('login'))
-    user_id = session.get('user_id', None)
-    if not user_id:
-        return redirect(url_for('login'))
 
     if request.method == 'POST':
         if 'create_new_user' in request.form:
-            username = request.form['new_username']
-            password = request.form['new_password']
-            print(f"Creating user: {username} Password: {password}")
-            create_user(username, password)
-
+            create_user(request.form['new_username'], request.form['new_password'])
         elif 'update_password' in request.form:
-            username = request.form['user_username']
-            password = request.form['new_password']
-            print(f"Updating {username} password to: {password}")
-            update_password(username, password)
-
+            update_password(request.form['user_username'], request.form['new_password'])
         elif 'delete_user' in request.form:
-            username = request.form['username_to_delete']
-            print(f"Deleting user: {username}")
-            delete_user(username)
-
+            delete_user(request.form['username_to_delete'])
         return redirect(url_for('settings'))
 
     return render_template('settings.html', users=get_users())
