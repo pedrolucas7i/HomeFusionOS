@@ -155,7 +155,7 @@ def dashboard():
     return render_template('dashboard.html',
                            cpu_usage=cpu_usage(),
                            ram_usage=ram_usage(),
-                           wifi_signal=get_wifi_signal_percentage(),
+                           wifi_signal=None,
                            wallpaper='static/wallpapers/homefusionOS.jpg')
 
 @app.route('/login', methods=['GET', 'POST'])
