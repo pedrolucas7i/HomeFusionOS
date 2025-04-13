@@ -30,12 +30,6 @@ app.config['UPLOAD_FOLDER'] = 'uploads/'
 
 socketio = SocketIO(app)
 
-# Getting the environment variables
-HOST_DB = os.environ.get('HOST_DB', 'localhost')
-USER_DB = os.environ.get('USER_DB', 'root')
-PASS_DB = os.environ.get('PASS_DB', '')
-DB = os.environ.get('DB', 'homefusionOS')
-
 OFFLINE_JSON_PATH = "dockers-conf/dockers.json"
 apps_data = defaultdict(list)
 app_ports = {}
@@ -67,31 +61,11 @@ ICON_OVERRIDES = {
     "code-server": "codeserver"
 }
 
-
-# Function to check and create the database if it doesn't exist
-def create_database_if_not_exists():
-    try:
-        with pymysql.connect(host=HOST_DB, user=USER_DB, password=PASS_DB) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(f"SHOW DATABASES LIKE '{DB}';")
-                result = cursor.fetchone()
-
-                if result:
-                    print(f'The database {DB} already exists.')
-                else:
-                    print(f'The database {DB} does not exist. Creating...')
-                    cursor.execute(f"CREATE DATABASE {DB};")
-                    print(f'Database {DB} created successfully.')
-    except pymysql.MySQLError as e:
-        print(f'Error connecting to MySQL: {e}')
-
 # Configuring the URI for the MariaDB database
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{USER_DB}:{PASS_DB}@{HOST_DB}:3306/{DB}'
+# SQLite 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homefusionOS.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
-# Create the database if it doesn't exist
-create_database_if_not_exists()
 
 # Defining models (tables) in MariaDB with SQLAlchemy
 class User(db.Model):
@@ -141,7 +115,7 @@ def check_and_create_first_user():
     first_user = User.query.first()
     if not first_user:  # If no user exists
         print("No user found. Creating default admin user.")
-        create_new_user('admin', 'adminpassword')  # Create a default admin user
+        create_user('admin', 'adminpassword')  # Create a default admin user
         print("Default admin user created.")
 
 def get_users():
