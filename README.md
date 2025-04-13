@@ -115,6 +115,17 @@ HomeFusionOS is designed to run on your local system or a dedicated machine. It 
 
 ---
 
+## 🔐 Default Login Credentials
+
+After installing HomeFusionOS, access the dashboard using the default credentials below:
+
+- **User:** `admin`  
+- **Password:** `adminpassword`
+
+Be sure to change this after your first login for security reasons.
+
+---
+
 ## HomeFusionOS Image (Custom Ubuntu)
 
 For best performance and compatibility, you can install **HomeFusionOS** on our computer, the **image** is based on **Ubuntu Server 22.04.05 LTS**.
