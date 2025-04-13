@@ -24,8 +24,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+defaultsecret='HomeFusionOS2025'
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY')
+app.secret_key = os.environ.get('SECRET_KEY', defaultsecret)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 
 # Database configuration for SQLite
