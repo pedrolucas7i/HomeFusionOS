@@ -16,6 +16,7 @@ from collections import defaultdict
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
+import sqlalchemy
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -30,7 +31,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads/'
 # Database configuration for SQLite
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homefusionOS.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 
 socketio = SocketIO(app)
 
