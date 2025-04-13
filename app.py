@@ -31,7 +31,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads/'
 # Database configuration for SQLite
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homefusionOS.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy()
+db = SQLAlchemy(app)
 
 socketio = SocketIO(app)
 
@@ -132,6 +132,20 @@ def dashboard():
                            ram_usage=ram_usage(),
                            wifi_signal=get_wifi_signal_percentage(),
                            wallpaper='static/wallpapers/homefusionOS.jpg')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session['logged_in'] = True
+            session['user_id'] = user.id
+            flash('Login successful!', 'success')
+            return redirect(url_for('dashboard'))
+        flash('Invalid credentials. Please try again.', 'danger')
+    return render_template('login.html')
 
 # Logout route
 @app.route('/logout')
