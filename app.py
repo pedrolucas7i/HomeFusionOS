@@ -24,8 +24,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+defaultsecret='HomeFusionOS2025'
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY')
+app.secret_key = os.environ.get('SECRET_KEY', defaultsecret)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 
 # Database configuration for SQLite
@@ -108,15 +109,39 @@ def cpu_usage():
 def ram_usage():
     return round(psutil.virtual_memory()[3]/1000000000, 2)
 
-def get_wifi_signal_percentage(interface='wlan0'):
+def get_active_interface():
     try:
-        iwconfig_output = subprocess.check_output(['iwconfig', interface]).decode('utf-8')
+        # Get the current local IP address (not loopback)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))  # Connect to a public IP to get the local IP used
+        local_ip = s.getsockname()[0]
+        s.close()
+
+        # Use 'ip' command to list all interfaces and their IP addresses
+        ip_output = subprocess.check_output(['ip', '-o', '-4', 'addr', 'show']).decode('utf-8')
+        for line in ip_output.splitlines():
+            parts = line.split()
+            iface = parts[1]
+            ip = parts[3].split('/')[0]
+            if ip == local_ip:
+                return iface  # Return the interface that matches the current local IP
+    except Exception:
+        return None
+
+def get_wifi_signal_percentage():
+    interface = get_active_interface()
+    if not interface:
+        return None
+
+    try:
+        # Use iwconfig to get signal level for the active interface
+        iwconfig_output = subprocess.check_output(['iwconfig', interface], stderr=subprocess.DEVNULL).decode('utf-8')
         signal_strength = re.search(r"Signal level=(-\d+)", iwconfig_output)
         if signal_strength:
             rssi = int(signal_strength.group(1))
-            min_rssi, max_rssi = -90, -30
+            min_rssi, max_rssi = -90, -30  # Typical RSSI range for Wi-Fi
             percentage = ((rssi - min_rssi) / (max_rssi - min_rssi)) * 100
-            return round(percentage)
+            return round(percentage)  # Convert RSSI to percentage
         return None
     except subprocess.CalledProcessError:
         return None
