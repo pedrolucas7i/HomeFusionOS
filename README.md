@@ -137,7 +137,7 @@ For best performance and compatibility, you can install **HomeFusionOS** on our 
 - Optimized network and disk settings for home server use
 - Ready to run HomeFusionOS out of the box
 
-📦 **Download HomeFusionOS.2025.04.20**:  
+📦 **Download HomeFusionOS-2025.04.20**:  
 **[Download from Google Drive](https://drive.google.com/file/d/1cX5vTPpm8yxc9rlMzYkkmdbrKGTtiy_W/view?usp=drive_link)**
 
 💡 **Installation tips**:
