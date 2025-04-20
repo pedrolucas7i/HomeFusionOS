@@ -7,25 +7,37 @@
     <script src="https://cdn.jsdelivr.net/npm/socket.io/client-dist/socket.io.js"></script>
     <style>
         body { margin: 0; background: black; overflow: hidden;}
-        #shell { height: calc(100vh - 30px); width: calc(100vw - 30px); margin: 15px; overflow: hidden;}
-        #shell div { height: 100vh; width: 100vw; overflow: hidden;}
+        #shell { height: 100vh; width: 100vw; margin: 0; overflow: hidden;}
     </style>
 </head>
 <body>
     <div id="shell"></div>
     <script>
+        // Create a new terminal instance
         const term = new Terminal();
-        const socket = io();
+        const socket = io();  // Connect to the Socket.IO server
 
         term.open(document.getElementById('shell'));
         term.focus();
 
+        // Event: when the user types something in the terminal
         term.onData(data => {
-            socket.emit('shell_input', data);
+            socket.emit('shell_input', data);  // Send the data to the server
         });
 
+        // Event: receive terminal output from the server
         socket.on('shell_output', data => {
-            term.write(data);
+            term.write(data);  // Display the output in the terminal
+        });
+
+        // Log connection status for debugging
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        // If the connection is lost
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
         });
     </script>
 </body>
