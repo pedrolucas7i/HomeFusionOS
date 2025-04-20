@@ -352,7 +352,22 @@ def settings():
 
     return render_template('settings.html', users=get_users())
 
+
+# Shell
+
+def read_and_emit_output(fd):
+    while True:
+        try:
+            data = os.read(fd, 1024).decode()  # Read terminal output
+            if data:
+                socketio.emit('shell_output', data)  # Send output to frontend
+            else:
+                break
+        except OSError:
+            break
+
 @app.route('/prompt', methods=['GET', 'POST'])
+
 def prompt():
     if 'logged_in' not in session:
         flash('Please log in to access this page.', 'danger')
@@ -361,19 +376,16 @@ def prompt():
     user_id = session.get('user_id', None)
     if not user_id:
         return redirect(url_for('login'))
+    
+    userhostfile = os.getlogin() + "@" + socket.gethostname() + ":/" + os.path.basename(os.getcwd()) + "$ "
+    return render_template('prompt.html', userhostfile=userhostfile, output="")
 
-    if platform.system() == "Windows":
-        userhostfile = os.getcwd() + " $ "
-    else:
-        userhostfile = getpass.getuser() + "@" + socket.gethostname() + ":/" + os.path.basename(os.getcwd()) + "$ "
-
-    return render_template('prompt.html', userhostfile=userhostfile, output="")  # keeping your old prompt.html
 
 @app.route('/shell')
 def terminal():
     if 'logged_in' not in session:
         return redirect(url_for('login'))
-    return render_template('xterm.html')
+    return render_template('xterm.html')  # Load the terminal in the frontend
 
 def read_and_emit_output(fd):
     while True:
@@ -383,23 +395,27 @@ def read_and_emit_output(fd):
         except OSError:
             break
 
+# Handle terminal input
 @socketio.on('shell_input')
 def handle_terminal_input(data):
     global child_fd
-    os.write(child_fd, data.encode())
+    if child_fd:
+        os.write(child_fd, data.encode())  # Write the input to the terminal
 
 @socketio.on('connect')
 def start_terminal(auth=None):
     global child_fd
 
-    if platform.system() == "Windows":
-        socketio.emit('shell_output', "Terminal not supported on Windows.")
+    # Check if a terminal is already running
+    if child_fd:
+        socketio.emit('shell_output', "Terminal already started.")
         return
 
-    pid, child_fd = pty.fork()
+    pid, child_fd = pty.fork()  # Create a new terminal (fork)
     if pid == 0:
-        os.execvp("bash", ["bash"])
+        os.execvp("bash", ["bash"])  # Execute bash in the child terminal
     else:
+        # Start a thread to read terminal output
         threading.Thread(target=read_and_emit_output, args=(child_fd,), daemon=True).start()
 
 # Load apps from the local JSON file
