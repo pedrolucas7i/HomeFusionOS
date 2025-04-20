@@ -13,7 +13,8 @@ import re
 import threading
 from datetime import datetime
 from collections import defaultdict
-
+import eventlet
+import eventlet.wsgi
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy
@@ -21,8 +22,11 @@ from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+import pty
 
 load_dotenv()
+
+child_fd = None
 
 defaultsecret='HomeFusionOS2025'
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -34,7 +38,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homefusionOS.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 OFFLINE_JSON_PATH = "dockers-conf/dockers.json"
 apps_data = defaultdict(list)
@@ -385,13 +389,18 @@ def handle_terminal_input(data):
     os.write(child_fd, data.encode())
 
 @socketio.on('connect')
-def start_terminal():
+def start_terminal(auth=None):
     global child_fd
+
+    if platform.system() == "Windows":
+        socketio.emit('shell_output', "Terminal not supported on Windows.")
+        return
+
     pid, child_fd = pty.fork()
     if pid == 0:
         os.execvp("bash", ["bash"])
     else:
-        threading.Thread(target=read_and_emit_output, args=(child_fd,)).start()
+        threading.Thread(target=read_and_emit_output, args=(child_fd,), daemon=True).start()
 
 # Load apps from the local JSON file
 def load_offline_apps():
@@ -496,4 +505,4 @@ def install_app_route(app_name):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=9900)
+	socketio.run(app, debug=True, host='0.0.0.0', port=9900)
