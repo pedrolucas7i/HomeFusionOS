@@ -138,7 +138,7 @@ For best performance and compatibility, you can install **HomeFusionOS** on our 
 - Ready to run HomeFusionOS out of the box
 
 📦 **Download HomeFusionOS.2025.04.13**:  
-**[Download from Google Drive](https://drive.google.com/file/d/1cGTUdlbTrIaCYddV9DbDfrewmX7_3XtV/view?usp=drive_link)**
+**[Download from Google Drive](https://drive.google.com/file/d/1cX5vTPpm8yxc9rlMzYkkmdbrKGTtiy_W/view?usp=drive_link)**
 
 💡 **Installation tips**:
 - Use tools like [Rufus](https://rufus.ie) or [balenaEtcher](https://www.balena.io/etcher/) to flash the image onto a USB drive.
