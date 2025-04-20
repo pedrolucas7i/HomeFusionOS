@@ -13,8 +13,6 @@ import re
 import threading
 from datetime import datetime
 from collections import defaultdict
-import eventlet
-import eventlet.wsgi
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import sqlalchemy
@@ -38,7 +36,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///homefusionOS.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-socketio = SocketIO(app, async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
 
 OFFLINE_JSON_PATH = "dockers-conf/dockers.json"
 apps_data = defaultdict(list)
@@ -360,7 +359,7 @@ def read_and_emit_output(fd):
         try:
             data = os.read(fd, 1024).decode()  # Read terminal output
             if data:
-                socketio.emit('shell_output', data)  # Send output to frontend
+                socketio.emit('shell_output', data)  # Send terminal output to the frontend
             else:
                 break
         except OSError:
@@ -390,8 +389,11 @@ def terminal():
 def read_and_emit_output(fd):
     while True:
         try:
-            data = os.read(fd, 1024).decode()
-            socketio.emit('shell_output', data)
+            data = os.read(fd, 1024).decode()  # Read terminal output
+            if data:
+                socketio.emit('shell_output', data)  # Send terminal output to the frontend
+            else:
+                break
         except OSError:
             break
 
@@ -400,23 +402,37 @@ def read_and_emit_output(fd):
 def handle_terminal_input(data):
     global child_fd
     if child_fd:
-        os.write(child_fd, data.encode())  # Write the input to the terminal
+        try:
+            # Write the user's input to the terminal process
+            os.write(child_fd, data.encode())
+        except OSError as e:
+            socketio.emit('shell_output', f"Error: {str(e)}")
 
+
+
+# Initialize the terminal with WebSocket, improving the user experience
 @socketio.on('connect')
 def start_terminal(auth=None):
     global child_fd
 
-    # Check if a terminal is already running
+    # If the terminal is already running, we need to disconnect and reopen it
     if child_fd:
-        socketio.emit('shell_output', "Terminal already started.")
-        return
-
-    pid, child_fd = pty.fork()  # Create a new terminal (fork)
+        os.close(child_fd)  # Close the existing terminal
+        child_fd = None  # Reset the child_fd to start fresh
+    
+    # Create a new terminal with pty
+    pid, child_fd = pty.fork()
     if pid == 0:
-        os.execvp("bash", ["bash"])  # Execute bash in the child terminal
+        # In the child process, execute bash
+        os.execvp("bash", ["bash"])
     else:
-        # Start a thread to read terminal output
+        # Emit "Ready to go" once the terminal is ready
+        socketio.emit('shell_output')
+        # Start a thread to read terminal output and emit it to the frontend
         threading.Thread(target=read_and_emit_output, args=(child_fd,), daemon=True).start()
+
+
+
 
 # Load apps from the local JSON file
 def load_offline_apps():
@@ -521,4 +537,6 @@ def install_app_route(app_name):
 
 
 if __name__ == '__main__':
-	socketio.run(app, debug=True, host='0.0.0.0', port=9900)
+    import eventlet
+    import eventlet.wsgi
+    socketio.run(app, host='0.0.0.0', port=9900, debug=True)
