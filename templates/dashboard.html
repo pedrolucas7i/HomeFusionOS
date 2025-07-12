@@ -5,13 +5,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   {% if theme == 'dark' %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='CSS/dark.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='CSS/dark.css') }}">
   {% else %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
   {% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&family=Russo+One&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Protest+Guerrilla&family=Russo+One&display=swap"
+    rel="stylesheet">
   <title>Dashboard</title>
 </head>
 
@@ -19,7 +20,8 @@
   <div id="dashboard" style="background-image: url('{{ wallpaper }}');">
     <div id="top">
       <div id="usage" onclick="">
-        <img onclick='settings()' style="margin-left: 0vw;" src="{{ url_for('static', filename='icons/settings.png') }}" alt="">
+        <img onclick='settings()' style="margin-left: 0vw;" src="{{ url_for('static', filename='icons/settings.png') }}"
+          alt="">
         <img src="{{ url_for('static', filename='icons/cpu.png') }}" alt="">
         {{ cpu_usage }}%
         <img src="{{ url_for('static', filename='icons/ram.png') }}" alt="">
@@ -84,93 +86,65 @@
   </div>
 </body>
 <script>
-  //WALLPAPER
-  var dashb = document.getElementById("dashboard");
+  const dashb = document.getElementById("dashboard");
   dashb.style.backgroundImage = `url('{{ wallpaper }}')`;
 
-  var app_run = false;
-  function prompt() {
-    if (!app_run) {
-      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./shell' frameborder='0'></iframe>";
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
-      }, 10); 
-    } else {
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
-        setTimeout(function () {
-          document.getElementById("iframe").style.visibility = "hidden";
-        }, 900); 
+  let appRun = false;
+  let currentApp = null;
+
+  function toggleApp(appSrc) {
+    const openDiv = document.getElementById("open");
+    if (!appRun) {
+      // Open the app iframe
+      openDiv.innerHTML = `<iframe id="iframe" src="${appSrc}" frameborder="0"></iframe>`;
+      setTimeout(() => {
+        const iframe = document.getElementById("iframe");
+        iframe.style.visibility = "visible";
+        iframe.style.transform = "translateY(0%) scale(1)";
       }, 10);
+      currentApp = appSrc;
+      appRun = true;
+    } else if (currentApp === appSrc) {
+      // Close the current app iframe
+      const iframe = document.getElementById("iframe");
+      iframe.style.transform = "translateY(90%) scale(0.2)";
+      setTimeout(() => {
+        iframe.style.visibility = "hidden";
+        openDiv.innerHTML = "";  // Clear iframe content
+      }, 900);
+      appRun = false;
+      currentApp = null;
+    } else {
+      // If a different app is requested, switch directly
+      const iframe = document.getElementById("iframe");
+      iframe.style.transform = "translateY(90%) scale(0.2)";
+      setTimeout(() => {
+        openDiv.innerHTML = `<iframe id="iframe" src="${appSrc}" frameborder="0"></iframe>`;
+        setTimeout(() => {
+          const newIframe = document.getElementById("iframe");
+          newIframe.style.visibility = "visible";
+          newIframe.style.transform = "translateY(0%) scale(1)";
+        }, 10);
+      }, 900);
+      currentApp = appSrc;
     }
-    app_run = !app_run;
+  }
+
+  // Now your app openers become just:
+  function prompt() {
+    toggleApp('./shell');
   }
   function settings() {
-    if (!app_run) {
-      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./settings' frameborder='0'></iframe>";
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
-      }, 10);
-    } else {
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
-        setTimeout(function () {
-          document.getElementById("iframe").style.visibility = "hidden";
-        }, 900);
-      }, 10);
-    }
-    app_run = !app_run;
+    toggleApp('./settings');
   }
-
   function files() {
-    if (!app_run) {
-      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./files' frameborder='0'></iframe>";
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
-      }, 10);
-    } else {
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
-        setTimeout(function () {
-          document.getElementById("iframe").style.visibility = "hidden";
-        }, 900);
-      }, 10);
-    }
-    app_run = !app_run;
+    toggleApp('./files');
   }
-
   function apps() {
-    if (!app_run) {
-      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./apps' frameborder='0'></iframe>";
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
-      }, 10);
-    } else {
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
-        setTimeout(function () {
-          document.getElementById("iframe").style.visibility = "hidden";
-        }, 900);
-      }, 10);
-    }
-    app_run = !app_run;
+    toggleApp('./apps');
   }
-
   function store() {
-    if (!app_run) {
-      document.getElementById("open").innerHTML = "<iframe id='iframe' src='./apps' frameborder='0'></iframe>";
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(0%) scale(1)";
-      }, 10);
-    } else {
-      setTimeout(function () {
-        document.getElementById("iframe").style.transform = "translateY(90%) scale(0.2)";
-        setTimeout(function () {
-          document.getElementById("iframe").style.visibility = "hidden";
-        }, 900);
-      }, 10);
-    }
-    app_run = !app_run;
+    toggleApp('./apps');
   }
 </script>
 

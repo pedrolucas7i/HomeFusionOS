@@ -1,130 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Settings</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/settings.css') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+
 </head>
-<body>
-<div id="user-config">
-    <h3>User Account Settings</h3>
-
-    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#createUserModal">Create New User</button>
-    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#updatePasswordModal">Update Password</button>
-    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete User</button>
-</div>
-<!-- Modal: Create User -->
-<div class="modal fade" id="createUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form method="POST" action="/settings">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Create New User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" name="new_username" class="form-control" placeholder="Enter new username" required>
-                    <br>
-                    <input type="password" name="new_password" class="form-control" placeholder="Enter the password" required>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" name="create_new_user" class="btn btn-info">Create</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal: Update Password -->
-<div class="modal fade" id="updatePasswordModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Atualizar Senha de Utilizador</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body row">
-                <div class="col-md-5 border-end">
-                    <ul class="list-group" id="userList">
-                        {% for user in users %}
-                            <li class="list-group-item list-group-item-action" onclick="selectUser('{{ user.username }}')">
-                                {{ user.username }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <div class="col-md-7" id="passwordFormWrapper" style="display: none;">
-                    <form method="POST" action="/settings">
-                        <input type="hidden" name="user_username" id="selectedUserId">
-                        <div class="mb-3">
-                            <label id="userLabel" class="form-label fw-bold"></label>
-                            <input type="password" name="new_password" class="form-control" placeholder="New password" required>
-                        </div>
-                        <button type="submit" name="update_password" class="btn btn-warning">Update password</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     function selectUser(username) {
         const formWrapper = document.getElementById('passwordFormWrapper');
         const userLabel = document.getElementById('userLabel');
         const userIdInput = document.getElementById('selectedUserId');
 
-        userLabel.textContent = `Alterar senha para: ${username}`;
+        userLabel.textContent = `Change password for: ${username}`;
         userIdInput.value = username;
 
         formWrapper.style.display = 'block';
         formWrapper.classList.add('animate__animated', 'animate__fadeInRight');
     }
-</script>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-
-
-<!-- Modal: Delete User -->
-<div class="modal fade" id="deleteUserModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Eliminar Utilizador</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body row">
-                <div class="col-md-5 border-end">
-                    <ul class="list-group" id="deleteUserList">
-                        {% for user in users %}
-                            <li class="list-group-item list-group-item-action" onclick="selectUserToDelete('{{ user.id }}', '{{ user.username }}')">
-                                {{ user.username }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <div class="col-md-7" id="deleteFormWrapper" style="display: none;">
-                    <form method="POST" action="/settings">
-                        <input type="hidden" name="username_to_delete" id="selectedUsernameToDelete">
-                        <p class="fw-bold" id="deleteConfirmText"></p>
-                        <button type="submit" name="delete_user" class="btn btn-danger">Confirmar Eliminação</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
     function selectUserToDelete(id, username) {
         const wrapper = document.getElementById('deleteFormWrapper');
         const confirmText = document.getElementById('deleteConfirmText');
         const usernameInput = document.getElementById('selectedUsernameToDelete');
 
-        confirmText.textContent = `Tem certeza que deseja eliminar o utilizador: ${username}?`;
+        confirmText.textContent = `Are you sure you want to delete user: ${username}?`;
         usernameInput.value = username;
 
         wrapper.style.display = 'block';
@@ -132,9 +36,112 @@
     }
 </script>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<body>
+    <div class="container my-5">
+        <h3 class="text-center mb-4">User Account Settings</h3>
+
+        <div class="accordion" id="settingsAccordion">
+
+            <!-- Create User Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingCreate">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseCreate">
+                        ➕ Create New User
+                    </button>
+                </h2>
+                <div id="collapseCreate" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <form method="POST" action="/settings">
+                            <div class="mb-3">
+                                <input type="text" name="new_username" class="form-control"
+                                    placeholder="Enter new username" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="password" name="new_password" class="form-control"
+                                    placeholder="Enter password" required>
+                            </div>
+                            <button type="submit" name="create_new_user" class="btn btn-info">Create User</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Password Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingUpdate">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseUpdate">
+                        🔐 Update Password
+                    </button>
+                </h2>
+                <div id="collapseUpdate" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body row">
+                        <div class="col-md-5 border-end">
+                            <ul class="list-group" id="userList">
+                                {% for user in users %}
+                                <li class="list-group-item list-group-item-action"
+                                    onclick="selectUser('{{ user.username }}')">
+                                    {{ user.username }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-7" id="passwordFormWrapper" style="display: none;">
+                            <form method="POST" action="/settings">
+                                <input type="hidden" name="user_username" id="selectedUserId">
+                                <div class="mb-3">
+                                    <label id="userLabel" class="form-label fw-bold"></label>
+                                    <input type="password" name="new_password" class="form-control"
+                                        placeholder="New password" required>
+                                </div>
+                                <button type="submit" name="update_password" class="btn btn-warning">Update
+                                    password</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete User Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDelete">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseDelete">
+                        🗑️ Delete User
+                    </button>
+                </h2>
+                <div id="collapseDelete" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body row">
+                        <div class="col-md-5 border-end">
+                            <ul class="list-group" id="deleteUserList">
+                                {% for user in users %}
+                                <li class="list-group-item list-group-item-action"
+                                    onclick="selectUserToDelete('{{ user.id }}', '{{ user.username }}')">
+                                    {{ user.username }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-7" id="deleteFormWrapper" style="display: none;">
+                            <form method="POST" action="/settings">
+                                <input type="hidden" name="username_to_delete" id="selectedUsernameToDelete">
+                                <p class="fw-bold text-danger" id="deleteConfirmText"></p>
+                                <button type="submit" name="delete_user" class="btn btn-danger">Confirm
+                                    Deletion</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
